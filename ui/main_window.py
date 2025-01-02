@@ -7,7 +7,7 @@ from .widgets import *
 from core import action_manager, ACTION_TOOL_BAR
 
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QHBoxLayout, QSizePolicy,QToolButton,
-                             QStatusBar, QDockWidget, QListView, QFileDialog, QTreeWidget, QTreeWidgetItem, QPushButton, QLabel, QMessageBox)
+                             QStatusBar, QDockWidget, QFileDialog, QPushButton, QLabel, QMessageBox)
 from PyQt5.QtCore import Qt
         
 
@@ -94,7 +94,6 @@ class MainWindow(QMainWindow):
         return self.create_action(name, icon, function, True, checked)
 
     def create_tool_bar(self):
-        """Create toolbar with icons"""
         self.toolbar = ToolBar(action_manager().get_action(ACTION_TOOL_BAR), parent=self)
         self.addToolBar(self.toolbar)
 
@@ -113,22 +112,18 @@ class MainWindow(QMainWindow):
 
     def create_central_widget(self):
         """Create central widget for the main layout"""
-        self.schematic_view = QDockWidget("Circuit", self)
+        self.schematic_view = Circuit(self)
         self.setCentralWidget(self.schematic_view)
 
         all_cells = ["Cell1", "Cell2", "Cell3", "Cell4"]
         self.library_browser = LibraryBrowser(all_cells)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
 
-        self.view_browser = QDockWidget("View Browser", self)
-        tree_widget = QTreeWidget(self.view_browser)
-        tree_widget.setHeaderLabels(["Library", "Cell"])
-        root = QTreeWidgetItem(tree_widget, ["Library1"])
-        QTreeWidgetItem(root, ["Cell1"])
-        QTreeWidgetItem(root, ["Cell2"])
-        self.view_browser.setWidget(tree_widget)
+        self.view_browser = ViewBrowser(self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)
-
+        
+        self.layers = LayersWidget(self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.layers)
         
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
@@ -151,6 +146,7 @@ class MainWindow(QMainWindow):
         file, _ = QFileDialog.getOpenFileName(self, "Open File", "", "Spice Files (*.sp);;GDS Files (*.gds;*.gdsII);;LEF Files (*.lef);;DEF Files (*.def);;All Files (*)")
         if file:
             print(f"Opening file: {file}")
+            self.schematic_view.load_svg(file)
 
     def close_file(self):
         pass

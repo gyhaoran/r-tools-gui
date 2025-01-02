@@ -4,7 +4,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 class LibraryBrowser(QDockWidget):
     def __init__(self, cell_names, parent=None):
-        super().__init__("Library Browser", parent)
+        super().__init__("Library Browser", parent=parent)
 
         # Initialize the widget
         self.widget = QWidget(self)
