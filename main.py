@@ -1,4 +1,3 @@
-# main.py
 from app import main_entry
 
 

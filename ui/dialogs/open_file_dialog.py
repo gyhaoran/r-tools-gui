@@ -1,30 +1,25 @@
-# ui/dialogs/open_file_dialog.py
+import os
+from PyQt5.QtWidgets import QFileDialog
+from core import library_manager, LibraryManager
 
-from PyQt5.QtWidgets import QDialog, QFileDialog, QVBoxLayout, QPushButton
-from PyQt5.QtCore import Qt
-
-class OpenFileDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Open File")
-        self.setGeometry(100, 100, 300, 100)
-
-        self._init_ui()
-
-    def _init_ui(self):
-        """Initialize the dialog UI."""
-        layout = QVBoxLayout(self)
-
-        # Create the open file dialog button
-        open_button = QPushButton("Open File", self)
-        open_button.clicked.connect(self.open_file)
-        layout.addWidget(open_button)
+class OpenFileDialog():
+    
+    def __init__(self, mainwindow):
+        self.mainwindow = mainwindow
 
     def open_file(self):
         """Open file dialog to select files."""
-        options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open File", "", "All Files (*);;SP Files (*.sp);;GDS Files (*.gds)", options=options)
-        if file_name:
-            print(f"File opened: {file_name}")
-            self.accept()
-            
+        file, _ = QFileDialog.getOpenFileName(self.mainwindow, "Open File", "", "LEF Files (*.lef);;DEF Files (*.def);;Spice Files (*.sp);;GDS Files (*.gds;*.gdsII);;All Files (*)")
+        if file:           
+            file_extension = os.path.splitext(file)[1].lower()[1:]            
+            if file_extension in ['lef']:
+                library_manager().load_lef_file(file)
+            elif file_extension in ['def']:
+                library_manager().load_def_file(file)
+            elif file_extension in ['sp']:
+                library_manager().load_spice_file(file)
+            elif file_extension in ['gds', 'gdsii']:
+                library_manager().load_gds_file(file)
+            else:
+                print("Unsupported file type.")
+                return

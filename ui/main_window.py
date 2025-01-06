@@ -5,7 +5,7 @@ import qtawesome as qta
 from .icons import *
 from .widgets import *
 from .dialogs import *
-from core import action_manager, ACTION_TOOL_BAR
+from core import library_manager, LibraryManager, action_manager, ACTION_TOOL_BAR
 
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QHBoxLayout, QSizePolicy,QToolButton,
                              QStatusBar, QDockWidget, QFileDialog, QPushButton, QLabel, QMessageBox)
@@ -112,20 +112,24 @@ class MainWindow(QMainWindow):
         status_bar.showMessage("Ready")
 
     def create_central_widget(self):
-        """Create central widget for the main layout"""
-        all_cells = ["Cell1", "Cell2", "Cell3", "Cell4"]
-        self.library_browser = LibraryBrowser(all_cells)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
-        
-        self.schematic_view = Circuit(self)
-        self.setCentralWidget(self.schematic_view)
+        # """Create central widget for the main layout"""
+        self.lef_macro_view = LefMacroView()
+        self.setCentralWidget(self.lef_macro_view)
         self.setContentsMargins(0,0,0,0)
-
-        self.view_browser = ViewBrowser(self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)
+        library_manager().add_observer(self.lef_macro_view)
         
-        self.layers = LayersWidget(self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.layers)
+        self.library_browser = LibraryBrowser(self.lef_macro_view)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
+        library_manager().add_observer(self.library_browser)
+        
+        # self.schematic_view = Circuit(self)
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.schematic_view)
+
+        # self.view_browser = ViewBrowser(self)
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)
+        
+        # self.layers = LayersWidget(self)
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.layers)
         
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
@@ -139,16 +143,15 @@ class MainWindow(QMainWindow):
         
         self.is_dark_theme = not self.is_dark_theme
         self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
+        self.lef_macro_view.set_theme(self.is_dark_theme)
 
     def new_project(self):
         dialog = NewProjectDialog(self)
         dialog.exec()
 
     def open_file(self):
-        file, _ = QFileDialog.getOpenFileName(self, "Open File", "", "Spice Files (*.sp);;GDS Files (*.gds;*.gdsII);;LEF Files (*.lef);;DEF Files (*.def);;All Files (*)")
-        if file:
-            print(f"Opening file: {file}")
-            self.schematic_view.load_svg(file)
+        dialog = OpenFileDialog(self)
+        dialog.open_file()
 
     def close_file(self):
         pass
@@ -209,8 +212,8 @@ class MainWindow(QMainWindow):
     def show_about(self):
         """Show About dialog with application information"""
         about_message = """
-        iCell
-        Copyright © 2022-2025
+        r-tools
+        Copyright © 2023-2025
         """
 
         msg_box = QMessageBox(self)
