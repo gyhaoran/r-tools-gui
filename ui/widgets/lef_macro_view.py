@@ -70,11 +70,11 @@ class LefMacroView(QWidget):
             sub = self.figure.add_subplot(1, num_plots, idx)
             sub.set_title(macro.name, color=self.text_color)  # Use the defined text color
             draw_macro(macro, ax=sub)
-
-            sub.axis('scaled')
+            
             sub.autoscale_view()
 
         # Refresh canvas
+        self.update_text_colors(self.text_color)
         self.canvas.draw()
 
     def update_lef(self, lef_dscp: 'LefDscp'):
@@ -82,6 +82,5 @@ class LefMacroView(QWidget):
 
     # Observer method, python use duck type
     def update(self):
-        print('update LefMacroView data')
         self.update_lef(library_manager().lef_dscp)
         

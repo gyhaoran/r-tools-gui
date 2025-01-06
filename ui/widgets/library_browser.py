@@ -38,5 +38,4 @@ class LibraryBrowser(QDockWidget):
     
     # Observer method, python use duck type
     def update(self):
-        print('update LibraryBrowser data')
         self.setup_models(library_manager().get_all_macros())
