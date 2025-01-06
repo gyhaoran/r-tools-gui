@@ -4,6 +4,7 @@ import qtawesome as qta
 
 from .icons import *
 from .widgets import *
+from .dialogs import *
 from core import action_manager, ACTION_TOOL_BAR
 
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QHBoxLayout, QSizePolicy,QToolButton,
@@ -31,7 +32,7 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
         
         file_menu = QMenu('File', self)
-        new_action = self.create_action('New', M_FILE_NEW_ICON, self.new_file)
+        new_action = self.create_action('New', M_FILE_NEW_ICON, self.new_project)
         open_action = self.create_action('Open', M_FILE_OPEN_ICON, self.open_file)        
         save_action = self.create_action('Save', M_FILE_SAVE_ICON, self.save_file)
         save_as_aciton = self.create_action('Save As', M_FILE_SAVE_AS_ICON, self.save_as_file)
@@ -112,12 +113,13 @@ class MainWindow(QMainWindow):
 
     def create_central_widget(self):
         """Create central widget for the main layout"""
-        self.schematic_view = Circuit(self)
-        self.setCentralWidget(self.schematic_view)
-
         all_cells = ["Cell1", "Cell2", "Cell3", "Cell4"]
         self.library_browser = LibraryBrowser(all_cells)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
+        
+        self.schematic_view = Circuit(self)
+        self.setCentralWidget(self.schematic_view)
+        self.setContentsMargins(0,0,0,0)
 
         self.view_browser = ViewBrowser(self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)
@@ -138,9 +140,9 @@ class MainWindow(QMainWindow):
         self.is_dark_theme = not self.is_dark_theme
         self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
 
-    # Menu functions (currently empty)
-    def new_file(self):
-        pass
+    def new_project(self):
+        dialog = NewProjectDialog(self)
+        dialog.exec()
 
     def open_file(self):
         file, _ = QFileDialog.getOpenFileName(self, "Open File", "", "Spice Files (*.sp);;GDS Files (*.gds;*.gdsII);;LEF Files (*.lef);;DEF Files (*.def);;All Files (*)")
@@ -159,39 +161,29 @@ class MainWindow(QMainWindow):
 
     def exit_app(self):
         self.close()
+        
+    def show_widgets(self, widget):
+        if widget is None:
+            return
+        if self.widget.isHidden():
+            self.widget.show()
+        else:
+            self.widget.hide()
 
     def show_cells(self):
-        if self.library_browser.isHidden():
-            self.library_browser.show()
-        else:
-            self.library_browser.hide()
+        self.show_widgets(self.library_browser)
 
     def show_circuit(self):
-        if self.schematic_view.isHidden():
-            self.schematic_view.show()
-        else:
-            self.schematic_view.hide()
-        
+        self.show_widgets(self.schematic_view)        
 
     def show_layout(self):
-        if self.view_browser.isHidden():
-            self.view_browser.show()
-        else:
-            self.view_browser.hide()
+        self.show_widgets(self.view_browser)
     
     def show_layers(self):
-        print("Showing Layers")
+        self.show_widgets(self.layers)
 
     def toggle_toolbar(self):
-        if self.toolbar.isHidden():
-            self.toolbar.show()
-        else:
-            self.toolbar.hide()
-            
-
-    def open_settings(self):
-        """Function for 'Settings' button"""
-        print("Settings button clicked")
+        self.show_widgets(self.toolbar)
 
     def pac_tool(self):
         pass
@@ -222,9 +214,9 @@ class MainWindow(QMainWindow):
         """
 
         msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Information)  # Set the icon type (Information, Warning, Error, etc.)
-        msg_box.setWindowTitle("About iCell")  # Set the title of the dialog box
-        msg_box.setText(about_message)  # Set the message text
-        msg_box.setStandardButtons(QMessageBox.Ok)  # Add an Ok button to close the dialog
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("About iCell")
+        msg_box.setText(about_message)
+        msg_box.setStandardButtons(QMessageBox.Ok) 
 
-        msg_box.exec_()  # Display the dialog
+        msg_box.exec_()

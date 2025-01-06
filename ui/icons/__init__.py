@@ -1,6 +1,6 @@
 
-M_FILE_NEW_ICON = 'fa.file'
-M_FILE_OPEN_ICON = 'fa.folder-open'
+M_FILE_NEW_ICON = 'fa.file-o'
+M_FILE_OPEN_ICON = 'fa.folder-open-o'
 M_FILE_SAVE_ICON = 'fa.save'
 M_FILE_SAVE_AS_ICON = 'fa.save'
 M_FILE_CLOSE_ICON = 'fa.close'

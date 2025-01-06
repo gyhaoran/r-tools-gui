@@ -157,5 +157,3 @@ class Circuit(QDockWidget):
         reset_action = menu.addAction("Reset View")
         reset_action.triggered.connect(self.reset_view)
         return menu
-
-                

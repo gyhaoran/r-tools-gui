@@ -32,8 +32,6 @@ class LayersWidget(QDockWidget):
         # Create a model to hold layers
         self.model = QStandardItemModel(self.layers_tree)
         self.layers_tree.setModel(self.model)
-        icon = QIcon()
-
         self.layout.addWidget(self.layers_tree)
         
         # Sample layers
