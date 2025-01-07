@@ -1,5 +1,4 @@
 from backend.lef_parser import LefDscp, draw_macro
-from core.observe import Observer
 from core import library_manager, LibraryManager
 
 from matplotlib.figure import Figure

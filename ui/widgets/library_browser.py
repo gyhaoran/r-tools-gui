@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt
 class LibraryBrowser(QDockWidget):
     def __init__(self, macro_view: LefMacroView, parent=None):
         super().__init__("Library Browser", parent=parent)
+        
         self.macro_view = macro_view
         
         self.widget = QWidget(self)
@@ -81,7 +82,6 @@ class LibraryBrowser(QDockWidget):
             macro_name = item.text()
             score = library_manager().calc_macro_score(macro_name)
             data = {macro_name: score}
-            print(data)
             dialog = MacroScoreDialog(data, self)
             dialog.exec_()
 

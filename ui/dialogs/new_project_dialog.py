@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QFormLayout, QL
                              QHBoxLayout, QSpacerItem, QSizePolicy, QDesktopWidget, QMessageBox)
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt
+import qtawesome as qta
 
 class NewProjectDialog(QDialog):       
     def __init__(self, parent):

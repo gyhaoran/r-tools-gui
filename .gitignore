@@ -1,5 +1,12 @@
 __pycache__
 
 .vscode
+.idea
+
 build
 release
+dist
+*egg-info
+
+*.log
+*.o

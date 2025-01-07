@@ -10,17 +10,22 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 import qtawesome as qta
+from ui.icons import *
 
 
 class MacroScoreDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Macro Score")
+        self.setWindowTitle("Macro Assessment")
+        self.setWindowIcon(qta.icon(M_TOOLS_MACRO_COST_ICON))
         self.setMinimumWidth(400)
+        
+        font = QFont("Roboto", 10)
+        self.setFont(font)
 
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setContentsMargins(5, 5, 5, 5)
 
         title_label = QLabel("Macro Scores", self)
         title_label.setFont(QFont("Roboto", 14, QFont.Bold))

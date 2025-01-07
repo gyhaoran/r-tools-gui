@@ -9,12 +9,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 import qtawesome as qta 
-
+from ui.icons import *
 
 class PinScoreDialog(QDialog):
     def __init__(self, data, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Pin Score")
+        self.setWindowTitle("Pin Assessment")
+        self.setWindowIcon(qta.icon(M_TOOLS_PIN_ASSESS_ICON))
         self.setMinimumWidth(400)
         self.setMinimumHeight(400)
 

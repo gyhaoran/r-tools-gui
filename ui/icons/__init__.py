@@ -1,4 +1,6 @@
 
+MAIN_WINDOW_ICON = 'ncti-eda.png'
+
 M_FILE_NEW_ICON = 'fa.file-o'
 M_FILE_OPEN_ICON = 'fa.folder-open-o'
 M_FILE_SAVE_ICON = 'fa.save'
@@ -13,8 +15,11 @@ M_VIEW_LAYOUT_ICON = 'msc.layout'
 M_VIEW_LAYERS_ICON = 'msc.layers'
 
 M_TOOLS_TOOLBAR_ICON = 'msc.tools'
-M_TOOLS_PIN_ASSESS_ICON = 'msc.pin'
 M_TOOLS_MACRO_COST_ICON = 'msc.type-hierarchy'
+M_TOOLS_PIN_ASSESS_ICON = 'msc.pin'
+M_TOOLS_SETTINGS_ICON = 'fa5s.cog'
+M_TOOLS_PIN_RULE_ICON = 'ph.ruler'
+M_TOOLS_DRC_RULE_ICON = 'ph.ruler-fill'
 
 M_PLACE_GLOBAL_ICON = 'fa.location-arrow'
 M_PLACE_DETAIL_ICON = 'fa.rss'
