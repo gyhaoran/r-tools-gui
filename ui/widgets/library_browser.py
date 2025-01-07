@@ -91,7 +91,7 @@ class LibraryBrowser(QDockWidget):
         if item:
             macro_name = item.text()
             score = library_manager().calc_pin_score(macro_name)
-            data = {macro_name: score, macro_name+'_2': score}
+            data = {macro_name: score}
             dialog = PinScoreDialog(data, self)
             dialog.exec_()
     

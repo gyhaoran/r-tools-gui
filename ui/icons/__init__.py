@@ -13,6 +13,8 @@ M_VIEW_LAYOUT_ICON = 'msc.layout'
 M_VIEW_LAYERS_ICON = 'msc.layers'
 
 M_TOOLS_TOOLBAR_ICON = 'msc.tools'
+M_TOOLS_PIN_ASSESS_ICON = 'msc.pin'
+M_TOOLS_MACRO_COST_ICON = 'msc.type-hierarchy'
 
 M_PLACE_GLOBAL_ICON = 'fa.location-arrow'
 M_PLACE_DETAIL_ICON = 'fa.rss'

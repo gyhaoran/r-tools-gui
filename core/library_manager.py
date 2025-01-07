@@ -27,9 +27,6 @@ class LibraryManager(Subject):
         self.gds = None
         self.netlist = None
         
-        self.macro_scores = {}
-        self.pin_scores = {}
-        
     def change_value(self):
         self.notify()
 
@@ -45,18 +42,18 @@ class LibraryManager(Subject):
         s = {"lefFiles": base_name, "min_width":0.06, "path": path}
         return s
     
-    def calc_macro_score(self, macro_name):
+    def calc_macro_score(self, macro_name=None):
         base_input = self._get_base_pac_input()
         score = pacpy.calc_macro_score(json.dumps(base_input))
-        self.macro_scores = json.loads(score)
-        return self.macro_scores.get(macro_name, None)        
+        macro_scores = json.loads(score)
+        return macro_scores.get(macro_name, None) if macro_name else macro_scores
     
-    def calc_pin_score(self, macro_name):
+    def calc_pin_score(self, macro_name=None):
         base_input = self._get_base_pac_input()
         base_input["min_space"] = 0.06
         score = pacpy.calc_pin_score(json.dumps(base_input))
-        self.pin_scores = json.loads(score)
-        return self.pin_scores.get(macro_name, {})
+        pin_scores = json.loads(score)
+        return pin_scores.get(macro_name, {}) if macro_name else pin_scores
         
     def load_def_file(self, def_file):
         pass

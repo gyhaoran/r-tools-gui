@@ -70,6 +70,12 @@ class MainWindow(QMainWindow):
         tools_menu = QMenu('Tools', self)
         toolbar_action = self.create_action('ToolBars', M_TOOLS_TOOLBAR_ICON, self.toggle_toolbar)
         tools_menu.addAction(toolbar_action)
+        seprator = tools_menu.addSeparator()
+        self.pin_assess_action = self.create_action('PinAssess', M_TOOLS_PIN_ASSESS_ICON, self.assess_pin)
+        self.macro_assess_action = self.create_action('MacroAssess', M_TOOLS_MACRO_COST_ICON, self.assess_macro)
+        tool_actions = [seprator, self.pin_assess_action, self.macro_assess_action]
+        tools_menu.addActions(tool_actions)
+        action_manager().add_actions(ACTION_TOOL_BAR, tool_actions)
 
         place_menu = QMenu('Place', self)
         global_place_action = self.create_action('Global Place', M_PLACE_GLOBAL_ICON, self.global_place)
@@ -203,8 +209,15 @@ class MainWindow(QMainWindow):
     def toggle_toolbar(self):
         self.show_widgets(self.toolbar)
 
-    def pac_tool(self):
-        pass
+    def assess_pin(self):
+        data = library_manager().calc_pin_score(None)
+        dialog = PinScoreDialog(data)
+        dialog.exec_()
+    
+    def assess_macro(self):
+        data = library_manager().calc_macro_score(None)
+        dialog = MacroScoreDialog(data)
+        dialog.exec_()
 
     def global_place(self):
         pass
