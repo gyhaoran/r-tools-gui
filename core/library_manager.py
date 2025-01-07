@@ -1,7 +1,8 @@
 import os, json
 import pacpy
-from backend.lef_parser import LefDscp, parse_lef_file
 from .observe import Subject
+from .setting_manager import setting_manager, SettingManager
+from backend.lef_parser import LefDscp, parse_lef_file
 
 
 class LibraryManager(Subject):
@@ -21,6 +22,7 @@ class LibraryManager(Subject):
         super().__init__()
         
         self.lef_file = ''
+        self.pac_rule = {'min_width': 0.06, 'min_space': 0.06, 'expand': True}
         
         self.lef_dscp: LefDscp = None
         self.def_dscp = None
@@ -39,18 +41,25 @@ class LibraryManager(Subject):
         lef_file = self.lef_file
         base_name = os.path.basename(lef_file)
         path = os.path.dirname(lef_file)
-        s = {"lefFiles": base_name, "min_width":0.06, "path": path}
+        
+        min_width = self.pac_rule.get('min_width', 0.6)
+        s = {"lefFiles": base_name, "min_width": min_width, "path": path}
         return s
     
     def calc_macro_score(self, macro_name=None):
+        self.pac_rule = setting_manager().get_pac_rule()
+
         base_input = self._get_base_pac_input()
         score = pacpy.calc_macro_score(json.dumps(base_input))
         macro_scores = json.loads(score)
         return macro_scores.get(macro_name, None) if macro_name else macro_scores
     
     def calc_pin_score(self, macro_name=None):
-        base_input = self._get_base_pac_input()
-        base_input["min_space"] = 0.06
+        self.pac_rule = setting_manager().get_pac_rule()
+        
+        base_input = self._get_base_pac_input()        
+        base_input["min_space"] = self.pac_rule.get('min_space', 0.6)
+        base_input["expand"] = self.pac_rule.get('expand', True)
         score = pacpy.calc_pin_score(json.dumps(base_input))
         pin_scores = json.loads(score)
         return pin_scores.get(macro_name, {}) if macro_name else pin_scores

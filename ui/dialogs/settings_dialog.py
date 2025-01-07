@@ -1,22 +1,16 @@
+from .settingpages import *
+from ui.icons import *
+from core import setting_manager, SettingManager
+
 from PyQt5.QtWidgets import (
-    QAction,
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
     QTabWidget,
-    QWidget,
-    QLabel,
-    QLineEdit,
-    QCheckBox,
     QPushButton,
-    QFormLayout,
     QMessageBox,
 )
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
 import qtawesome as qta
-from .settingpages import *
-from ui.icons import *
 
 
 class SettingsDialog(QDialog):
@@ -30,7 +24,6 @@ class SettingsDialog(QDialog):
         self.tabs = QTabWidget()
         main_layout.addWidget(self.tabs)
 
-
         self.general_tab = GeneralSettingsPage(self)
         self.tabs.addTab(self.general_tab, "General Settings")
         self.tabs.setTabIcon(0, qta.icon(M_TOOLS_SETTINGS_ICON))
@@ -42,7 +35,6 @@ class SettingsDialog(QDialog):
         self.drc_rule_tab = DrcRulePage(self)
         self.tabs.addTab(self.drc_rule_tab, "DRC Design Rule")
         self.tabs.setTabIcon(2, qta.icon(M_TOOLS_DRC_RULE_ICON))
-
 
         self.tabs.setCurrentIndex(initial_tab_index)
 
@@ -58,14 +50,10 @@ class SettingsDialog(QDialog):
         
     def save_settings(self):
         """save settings"""
-        general_settings = self.general_tab.get_settings()
-        print("General Settings:", general_settings)
-
-        pin_rule_settings = self.pin_rule_tab.get_settings()
-        print("Pin Assessment Rule Settings:", pin_rule_settings)
-
-        drc_rule_settings = self.drc_rule_tab.get_settings()
-        print("DRC Design Rule Settings:", drc_rule_settings)
-
+        general_rule = self.general_tab.get_settings()
+        pac_rule = self.pin_rule_tab.get_settings()
+        drc_rule = self.drc_rule_tab.get_settings()
+        setting_manager().update_settings(general_rule, pac_rule, drc_rule)
+        
         QMessageBox.information(self, "Saved", "Settings have been saved successfully!")
         self.close()

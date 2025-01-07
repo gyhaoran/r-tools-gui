@@ -53,16 +53,16 @@ class PinAssessRulePage(QWidget):
 
         # Minimum width setting
         self.min_width_spinbox = QDoubleSpinBox()
-        self.min_width_spinbox.setRange(0.01, 10.0)
+        self.min_width_spinbox.setRange(0.001, 10.0)
         self.min_width_spinbox.setValue(0.1) 
         self.min_width_spinbox.setSingleStep(0.01) 
         form_layout.addRow("Minimum Width (µm):", self.min_width_spinbox)
 
         # Minimum spacing setting
         self.min_spacing_spinbox = QDoubleSpinBox()
-        self.min_spacing_spinbox.setRange(0.01, 10.0)
+        self.min_spacing_spinbox.setRange(0.001, 10.0)
         self.min_spacing_spinbox.setValue(0.1) 
-        self.min_spacing_spinbox.setSingleStep(0.01) 
+        self.min_spacing_spinbox.setSingleStep(0.01)
         form_layout.addRow("Minimum Spacing (µm):", self.min_spacing_spinbox)
 
         # Enable/disable Pin Expand feature
@@ -129,7 +129,7 @@ class PinAssessRulePage(QWidget):
         return {
             "rule_name": rule_name,
             "min_width": self.min_width_spinbox.value(),
-            "min_spacing": self.min_spacing_spinbox.value(),
-            "enable_pin_expand": self.enable_pin_expand_checkbox.isChecked(),
+            "min_space": self.min_spacing_spinbox.value(),
+            "expand": self.enable_pin_expand_checkbox.isChecked(),
         }
         

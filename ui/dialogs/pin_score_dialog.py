@@ -1,3 +1,4 @@
+from ui.icons import *
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -9,7 +10,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 import qtawesome as qta 
-from ui.icons import *
+
 
 class PinScoreDialog(QDialog):
     def __init__(self, data, parent=None):

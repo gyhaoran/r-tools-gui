@@ -59,16 +59,16 @@ class DrcRulePage(QWidget):
 
         # Minimum spacing setting
         self.min_spacing_spinbox = QDoubleSpinBox()
-        self.min_spacing_spinbox.setRange(0.01, 10.0)  
+        self.min_spacing_spinbox.setRange(0.001, 10.0)  
         self.min_spacing_spinbox.setValue(0.1) 
-        self.min_spacing_spinbox.setSingleStep(0.01)  
+        self.min_spacing_spinbox.setSingleStep(0.001)  
         form_layout.addRow("Minimum Spacing (µm):", self.min_spacing_spinbox)
 
         # Minimum contact size setting
         self.min_contact_size_spinbox = QDoubleSpinBox()
-        self.min_contact_size_spinbox.setRange(0.01, 10.0)  
+        self.min_contact_size_spinbox.setRange(0.001, 10.0)  
         self.min_contact_size_spinbox.setValue(0.2)  
-        self.min_contact_size_spinbox.setSingleStep(0.01)
+        self.min_contact_size_spinbox.setSingleStep(0.001)
         form_layout.addRow("Minimum Contact Size (µm):", self.min_contact_size_spinbox)
 
 
@@ -128,7 +128,7 @@ class DrcRulePage(QWidget):
         return {
             "rule_name": rule_name,
             "min_width": self.min_width_spinbox.value(),
-            "min_spacing": self.min_spacing_spinbox.value(),
+            "min_space": self.min_spacing_spinbox.value(),
             "min_contact_size": self.min_contact_size_spinbox.value(),
         }
         
