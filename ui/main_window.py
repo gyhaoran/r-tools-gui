@@ -21,11 +21,19 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))  # Default Dark theme
         self.is_dark_theme = False
 
+        self.macro_view = None        
+        self.library_browser = None      
+        self.schematic_view = None
+        self.view_browser = None        
+        self.layers = None
+        
         self.create_menu_bar()
         self.create_tool_bar()
         self.create_status_bar()
         self.create_central_widget()
-
+        
+    def update_toolbar_status(self):
+        pass
 
     def create_menu_bar(self):
         """Create the menu bar with actions"""
@@ -45,15 +53,19 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
         action_manager().add_actions(ACTION_TOOL_BAR, [new_action, open_action, save_action, seprator])
-        
 
         view_menu = QMenu('View', self)
         lib_action = self.create_checked_action('Library', M_VIEW_LIBRARY_ICON, self.show_cells)
-        circuit_action = self.create_checked_action('Circuit', M_VIEW_CIRCUIT_ICON, self.show_circuit)
-        layout_action = self.create_checked_action('Layout', M_VIEW_LAYOUT_ICON, self.show_layout)
-        layers_action = self.create_checked_action('Layers', M_VIEW_LAYERS_ICON, self.show_layers)        
-        view_menu.addActions([lib_action, circuit_action, layout_action, layers_action])
-        action_manager().add_actions(ACTION_TOOL_BAR, [lib_action, circuit_action, layout_action, layers_action])
+        macro_action = self.create_checked_action('Macro View', M_VIEW_MACRO_VIEW_ICON, self.show_macro_view)
+        self.circuit_action = self.create_checked_action('Circuit', M_VIEW_CIRCUIT_ICON, self.show_circuit)
+        self.circuit_action.setDisabled(True)        
+        self.layout_action = self.create_checked_action('Layout', M_VIEW_LAYOUT_ICON, self.show_layout)
+        self.layout_action.setDisabled(True)
+        self.layers_action = self.create_checked_action('Layers', M_VIEW_LAYERS_ICON, self.show_layers)
+        self.layers_action.setDisabled(True)
+        view_actions= [lib_action, macro_action, self.circuit_action, self.layout_action, self.layers_action]
+        view_menu.addActions(view_actions)
+        action_manager().add_actions(ACTION_TOOL_BAR, view_actions)
 
         tools_menu = QMenu('Tools', self)
         toolbar_action = self.create_action('ToolBars', M_TOOLS_TOOLBAR_ICON, self.toggle_toolbar)
@@ -113,12 +125,12 @@ class MainWindow(QMainWindow):
 
     def create_central_widget(self):
         # """Create central widget for the main layout"""
-        self.lef_macro_view = LefMacroView()
-        self.setCentralWidget(self.lef_macro_view)
+        self.macro_view = LefMacroView()
+        self.setCentralWidget(self.macro_view)
         self.setContentsMargins(0,0,0,0)
-        library_manager().add_observer(self.lef_macro_view)
+        library_manager().add_observer(self.macro_view)
         
-        self.library_browser = LibraryBrowser(self.lef_macro_view)
+        self.library_browser = LibraryBrowser(self.macro_view)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
         library_manager().add_observer(self.library_browser)
         
@@ -143,7 +155,7 @@ class MainWindow(QMainWindow):
         
         self.is_dark_theme = not self.is_dark_theme
         self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
-        self.lef_macro_view.set_theme(self.is_dark_theme)
+        self.macro_view.set_theme(self.is_dark_theme)
 
     def new_project(self):
         dialog = NewProjectDialog(self)
@@ -168,13 +180,16 @@ class MainWindow(QMainWindow):
     def show_widgets(self, widget):
         if widget is None:
             return
-        if self.widget.isHidden():
-            self.widget.show()
+        if widget.isHidden():
+            widget.show()
         else:
-            self.widget.hide()
+            widget.hide()
 
     def show_cells(self):
         self.show_widgets(self.library_browser)
+        
+    def show_macro_view(self):
+        self.show_widgets(self.macro_view)
 
     def show_circuit(self):
         self.show_widgets(self.schematic_view)        

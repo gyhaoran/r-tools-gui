@@ -7,6 +7,7 @@ M_FILE_CLOSE_ICON = 'fa.close'
 M_FILE_EXIT_ICON = 'fa.power-off'
 
 M_VIEW_LIBRARY_ICON = 'msc.library'
+M_VIEW_MACRO_VIEW_ICON = 'msc.dashboard'
 M_VIEW_CIRCUIT_ICON = 'msc.circuit-board'
 M_VIEW_LAYOUT_ICON = 'msc.layout'
 M_VIEW_LAYERS_ICON = 'msc.layers'

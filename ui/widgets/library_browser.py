@@ -1,7 +1,13 @@
-from PyQt5.QtWidgets import QDockWidget, QListView, QVBoxLayout, QWidget
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from core import library_manager, LibraryManager
+import pacpy
+import json
+import os
+import qtawesome as qta
 from .lef_macro_view import LefMacroView
+from core import library_manager, LibraryManager
+from ui.dialogs import MacroScoreDialog, PinScoreDialog
+from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtCore import Qt
 
 class LibraryBrowser(QDockWidget):
     def __init__(self, macro_view: LefMacroView, parent=None):
@@ -19,6 +25,9 @@ class LibraryBrowser(QDockWidget):
         self.list_view.setEditTriggers(QListView.NoEditTriggers)
         self.list_view.doubleClicked.connect(self.on_item_double_clicked)
         
+        self.list_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.list_view.customContextMenuRequested.connect(self.show_context_menu)
+                
         layout.addWidget(self.list_view)
 
     
@@ -35,6 +44,56 @@ class LibraryBrowser(QDockWidget):
         item = self.model.itemFromIndex(index)
         if item:
             self.macro_view.draw_cells([item.text()])
+    
+    def show_context_menu(self, position):
+        index = self.list_view.indexAt(position)
+        if not index.isValid():
+            return
+
+        menu = QMenu(self.list_view)
+
+        copy_name_action = QAction(qta.icon('msc.copy'), "Copy Name", self)
+        calc_macro_score_action = QAction(qta.icon('msc.type-hierarchy'), "Calc Macro Score", self)
+        calc_pin_score_action = QAction(qta.icon('msc.pin'), "Calc Pin Score", self)
+
+        menu.addAction(copy_name_action)
+        menu.addAction(calc_macro_score_action)
+        menu.addAction(calc_pin_score_action)
+
+        action = menu.exec_(self.list_view.mapToGlobal(position))
+
+        if action == copy_name_action:
+            self.copy_name(index)
+        elif action == calc_macro_score_action:
+            self.calc_macro_score(index)
+        elif action == calc_pin_score_action:
+            self.calc_pin_score(index)
+
+    def copy_name(self, index):
+        item = self.model.itemFromIndex(index)
+        if item:
+            clipboard = QApplication.clipboard()
+            clipboard.setText(item.text())            
+
+    def calc_macro_score(self, index):
+        item = self.model.itemFromIndex(index)
+        if item:
+            macro_name = item.text()
+            score = library_manager().calc_macro_score(macro_name)
+            data = {macro_name: score}
+            print(data)
+            dialog = MacroScoreDialog(data, self)
+            dialog.exec_()
+
+
+    def calc_pin_score(self, index):
+        item = self.model.itemFromIndex(index)
+        if item:
+            macro_name = item.text()
+            score = library_manager().calc_pin_score(macro_name)
+            data = {macro_name: score, macro_name+'_2': score}
+            dialog = PinScoreDialog(data, self)
+            dialog.exec_()
     
     # Observer method, python use duck type
     def update(self):
