@@ -80,7 +80,7 @@ class PinAssessRulePage(QWidget):
 
         # Dictionary to store rule parameters
         self.rule_parameters = {
-            "asap7": {"min_width": 0.6, "min_spacing": 0.6, "enable_pin_expand": True},
+            "asap7": {"min_width": 0.07, "min_spacing": 0.065, "enable_pin_expand": True},
             "smic-7": {"min_width": 0.2, "min_spacing": 0.2, "enable_pin_expand": False},
             "smic-14": {"min_width": 0.3, "min_spacing": 0.3, "enable_pin_expand": True},
         }
