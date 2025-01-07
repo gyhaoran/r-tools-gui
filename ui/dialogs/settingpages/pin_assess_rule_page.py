@@ -37,14 +37,14 @@ class PinAssessRulePage(QWidget):
 
         # Add rule button (icon: +)
         self.add_rule_button = QPushButton()
-        self.add_rule_button.setIcon(qta.icon("fa5s.plus")) 
+        self.add_rule_button.setIcon(qta.icon("fa.plus")) 
         self.add_rule_button.setFixedSize(30, 30)
         self.add_rule_button.clicked.connect(self.add_rule)
         rule_layout.addWidget(self.add_rule_button)
 
         # Delete rule button (icon: -)
         self.delete_rule_button = QPushButton()
-        self.delete_rule_button.setIcon(qta.icon("fa5s.minus")) 
+        self.delete_rule_button.setIcon(qta.icon("fa.trash-o")) 
         self.delete_rule_button.setFixedSize(30, 30)
         self.delete_rule_button.clicked.connect(self.delete_rule)
         rule_layout.addWidget(self.delete_rule_button)
@@ -74,7 +74,7 @@ class PinAssessRulePage(QWidget):
 
         # Current rule label (fixed height and more prominent)
         self.current_rule_label = QLabel("Current Rule:  asap7")
-        self.current_rule_label.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.current_rule_label.setStyleSheet("font-size: 15px; font-weight: bold;")
         self.current_rule_label.setFixedHeight(30)
         layout.addWidget(self.current_rule_label)
 
