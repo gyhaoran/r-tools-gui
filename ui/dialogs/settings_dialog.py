@@ -77,19 +77,21 @@ class SettingsDialog(QDialog):
         
     def save_settings(self):
         """save settings"""
-        self.update_settings()
+        self.pin_rule_tab.save()
+        self.drc_rule_tab.save()
         
-        QMessageBox.information(self, "Saved", "Settings have been saved successfully!")
+        self.update_settings()
 
         for index in range(self.tabs.count()):
             self.update_tab_title(index, is_modified=False)
-        
+    
+    @property
     def _is_modified(self):
         return self.pin_rule_tab.is_modified or self.drc_rule_tab.is_modified
     
     def on_cancel(self):
         """Handle the Cancel button click."""
-        if self._is_modified():
+        if self._is_modified:
             confirm = QMessageBox.question(
                 self, "Unsaved Changes",
                 "You have unsaved changes. Are you sure you want to cancel?",
@@ -98,4 +100,22 @@ class SettingsDialog(QDialog):
             if confirm == QMessageBox.No:
                 return  # User chose not to cancel
         self.reject()  # Close the dialog
+
         
+    def closeEvent(self, event):
+        """Override closeEvent to handle unsaved changes."""
+        if self._is_modified:
+            confirm = QMessageBox.question(
+                self, "Unsaved Changes",
+                "You have unsaved changes. Are you sure you want to close?",
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+            )
+            if confirm == QMessageBox.Save:
+                self.save_settings()  # Save changes and close
+                event.accept()
+            elif confirm == QMessageBox.Discard:
+                event.accept()  # Discard changes and close
+            else:
+                event.ignore()  # Cancel the close operation
+        else:
+            event.accept()  # No unsaved changes, close the dialog

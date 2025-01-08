@@ -146,8 +146,11 @@ def draw_pin(pin, ax):
     
     # Annotate the pin name at the center of the first layer's shape
     for layer in pin.info["PORT"].info["LAYER"]:
-        for shape in layer.shapes:
+        for shape in layer.shapes:            
             scaled_pts = scalePts(shape.points, SCALE)
+            if shape.type == "RECT":
+                scaled_pts = rect_to_polygon(scaled_pts)
+            # else: # shape.type POLYGON
             x_center = (scaled_pts[0][0] + scaled_pts[2][0]) / 2.0
             y_center = (scaled_pts[0][1] + scaled_pts[2][1]) / 2.0            
             ax.annotate(pin.name, xy=(x_center, y_center), ha='center', va='center', color='gray', size=15, zorder=10)

@@ -80,14 +80,14 @@ class PinAssessRulePage(QWidget):
         # Minimum width setting
         self.min_width_spinbox = QDoubleSpinBox()
         self.min_width_spinbox.setRange(0.001, 10.0)
-        self.min_width_spinbox.setValue(0.1) 
+        self.min_width_spinbox.setDecimals(3)
         self.min_width_spinbox.setSingleStep(0.01)
         form_layout.addRow("Minimum Width (µm):", self.min_width_spinbox)
 
         # Minimum spacing setting
         self.min_space_spinbox = QDoubleSpinBox()
         self.min_space_spinbox.setRange(0.001, 10.0)
-        self.min_space_spinbox.setValue(0.1) 
+        self.min_space_spinbox.setDecimals(3)
         self.min_space_spinbox.setSingleStep(0.01)
         form_layout.addRow("Minimum Spacing (µm):", self.min_space_spinbox)
 
@@ -130,6 +130,19 @@ class PinAssessRulePage(QWidget):
             self.min_space_spinbox.setValue(params["min_space"])
             self.expand_checkbox.setChecked(params["expand"])
         self.current_rule_label.setText(f"Current Rule:  {rule_name}")
+
+    def _save_parameters(self):
+        rule_name = self.rule_combo.currentText()
+        if rule_name in self.rule_parameters:
+            params = self.rule_parameters[rule_name]
+            params["min_width"] = self.min_width_spinbox.value()
+            params["min_space"] = self.min_space_spinbox.value()
+            params["expand"] = self.expand_checkbox.isChecked()
+            
+    def save(self):
+        """Save user modify"""
+        self.is_modified = False
+        self._save_parameters()
 
     def add_rule(self):
         """Add a new rule."""

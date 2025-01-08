@@ -28,15 +28,15 @@ class SettingManager:
             self.drc = 'asap7'
             
             self.pac_rules = {
-                "asap7" : {"min_width": 0.06, "min_space": 0.06, "expand": True},
-                "smic7" : {"min_width": 0.20, "min_space": 0.20, "expand": False},
-                "smic14": {"min_width": 0.30, "min_space": 0.30, "expand": True},
+                "asap7" : {"min_width": 0.018, "min_space": 0.018, "expand": True},
+                "smic7" : {"min_width": 0.010, "min_space": 0.010, "expand": False},
+                "smic14": {"min_width": 0.020, "min_space": 0.020, "expand": True},
             }
             
             self.drc_rules = {
-                "asap7" : {"min_width": 0.06, "min_space": 0.06, "min_contact_size": 0.2},
-                "smic7" : {"min_width": 0.02, "min_space": 0.02, "min_contact_size": 0.3},
-                "smic14": {"min_width": 0.03, "min_space": 0.03, "min_contact_size": 0.4},
+                "asap7" : {"min_width": 0.018, "min_space": 0.018, "min_contact_size": 0.2},
+                "smic7" : {"min_width": 0.010, "min_space": 0.010, "min_contact_size": 0.3},
+                "smic14": {"min_width": 0.020, "min_space": 0.020, "min_contact_size": 0.4},
             }
             
             # Load settings when the instance is created for the first time
