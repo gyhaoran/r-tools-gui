@@ -5,7 +5,7 @@ import qtawesome as qta
 from .icons import *
 from .widgets import *
 from .dialogs import *
-from core import library_manager, LibraryManager, action_manager, ACTION_TOOL_BAR
+from core import setting_manager, library_manager, LibraryManager, action_manager, ACTION_TOOL_BAR
 
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QHBoxLayout, QSizePolicy,QToolButton,
                              QStatusBar, QDockWidget, QFileDialog, QPushButton, QLabel, QMessageBox)
@@ -252,7 +252,7 @@ class MainWindow(QMainWindow):
         dialog.exec_()
         
     def show_settings(self, index=0):
-        dialog = SettingsDialog(self, initial_tab_index=index)
+        dialog = SettingsDialog(self, tab_index=index)
         dialog.exec_()
 
     def global_place(self):
@@ -287,3 +287,9 @@ class MainWindow(QMainWindow):
         msg_box.setStandardButtons(QMessageBox.Ok) 
 
         msg_box.exec_()
+        
+    def closeEvent(self, event):
+        """Override the closeEvent to save settings before closing."""
+        setting_manager().save_settings()
+        
+        event.accept()

@@ -19,15 +19,15 @@ class LibraryManager(Subject):
         """Initialize the library manager"""
         if not hasattr(self, '_initialized'):
             self._initialized = True
-        super().__init__()
-        
-        self.lef_file = ''
-        self.pac_rule = {'min_width': 0.06, 'min_space': 0.06, 'expand': True}
-        
-        self.lef_dscp: LefDscp = None
-        self.def_dscp = None
-        self.gds = None
-        self.netlist = None
+            super().__init__()
+            
+            self.lef_file = ''
+            self.pac_rule = {}
+            
+            self.lef_dscp: LefDscp = None
+            self.def_dscp = None
+            self.gds = None
+            self.netlist = None
         
     def change_value(self):
         self.notify()
@@ -38,6 +38,8 @@ class LibraryManager(Subject):
         self.change_value()
     
     def _get_base_pac_input(self):
+        self.pac_rule = setting_manager().get_pac_rule()
+        
         lef_file = self.lef_file
         base_name = os.path.basename(lef_file)
         path = os.path.dirname(lef_file)
@@ -47,17 +49,15 @@ class LibraryManager(Subject):
         return s
     
     def calc_macro_score(self, macro_name=None):
-        self.pac_rule = setting_manager().get_pac_rule()
-
         base_input = self._get_base_pac_input()
+        
         score = pacpy.calc_macro_score(json.dumps(base_input))
         macro_scores = json.loads(score)
         return macro_scores.get(macro_name, None) if macro_name else macro_scores
     
-    def calc_pin_score(self, macro_name=None):
-        self.pac_rule = setting_manager().get_pac_rule()
-        
-        base_input = self._get_base_pac_input()        
+    def calc_pin_score(self, macro_name=None):        
+        base_input = self._get_base_pac_input()    
+            
         base_input["min_space"] = self.pac_rule.get('min_space', 0.6)
         base_input["expand"] = self.pac_rule.get('expand', True)
         score = pacpy.calc_pin_score(json.dumps(base_input))
