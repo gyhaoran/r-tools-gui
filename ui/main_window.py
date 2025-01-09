@@ -86,7 +86,7 @@ class MainWindow(QMainWindow):
         
         self.pin_assess_action = self.create_action('PinAssess', M_TOOLS_PIN_ASSESS_ICON, self.assess_pin)
         self.macro_assess_action = self.create_action('MacroAssess', M_TOOLS_MACRO_COST_ICON, self.assess_macro)
-        self.pin_density_action = self.create_action('PinAssess', M_TOOLS_PIN_DENSITY_ICON, self.assess_pin_density)
+        self.pin_density_action = self.create_action('PinDensity', M_TOOLS_PIN_DENSITY_ICON, self.assess_pin_density)
         
         tool_actions = [seprator, self.pin_assess_action, self.macro_assess_action, self.pin_density_action]
         tools_menu.addActions(tool_actions)
@@ -177,10 +177,8 @@ class MainWindow(QMainWindow):
         
         # self.schematic_view = Circuit(self)
         # self.addDockWidget(Qt.RightDockWidgetArea, self.schematic_view)
-
         # self.view_browser = ViewBrowser(self)
-        # self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)
-        
+        # self.addDockWidget(Qt.RightDockWidgetArea, self.view_browser)        
         # self.layers = LayersWidget(self)
         # self.addDockWidget(Qt.RightDockWidgetArea, self.layers)
         

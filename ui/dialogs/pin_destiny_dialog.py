@@ -29,13 +29,11 @@ class PinDestinyDialog(QDialog):
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(5, 5, 5, 5)
 
-        # Title Label
         title_label = QLabel("Pin Destiny", self)
         title_label.setFont(QFont("Roboto", 14, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(title_label)
 
-        # Table Widget
         self.table = self._create_table()
         main_layout.addWidget(self.table)
 
@@ -55,17 +53,15 @@ class PinDestinyDialog(QDialog):
         self.table.setRowCount(len(data))
         for row, (macro_name, score) in enumerate(data.items()):
             self._add_table_row(row, macro_name, score)
-        self.table.sortItems(1, Qt.AscendingOrder)  # Sort by Score column
+        self.table.sortItems(1, Qt.AscendingOrder)
 
     def _add_table_row(self, row, macro_name, score):
         """Add a row to the table."""
-        # Macro Name
         name_item = QTableWidgetItem(macro_name)
         name_item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, 0, name_item)
 
-        # Score
-        score_item = QTableWidgetItem(f"{score:.2f}")
+        score_item = QTableWidgetItem(f"{score:.5f}")
         score_item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, 1, score_item)
         

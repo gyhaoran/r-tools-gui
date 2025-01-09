@@ -112,7 +112,9 @@ class PinAssessRulePage(QWidget):
         self.update_rule_parameters()
         
         self.min_width_spinbox.valueChanged.connect(self.mark_as_modified)
+        self.min_width_spinbox.textChanged.connect(self.mark_as_modified)
         self.min_space_spinbox.valueChanged.connect(self.mark_as_modified)
+        self.min_space_spinbox.textChanged.connect(self.mark_as_modified)
         self.expand_checkbox.stateChanged.connect(self.mark_as_modified)
 
     def mark_as_modified(self):

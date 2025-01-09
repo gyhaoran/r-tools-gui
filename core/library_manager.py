@@ -73,7 +73,7 @@ class LibraryManager(Subject):
     def load_gds_file(self, gds_file):
         pass
     
-    def load_sp_file(self, sp_file):
+    def load_spice_file(self, sp_file):
         pass
 
     def get_all_macros(self):
