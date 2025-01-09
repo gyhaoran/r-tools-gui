@@ -72,13 +72,13 @@ class Macro(Statement):
         """
         s = ""
         s += self.type + " " + self.name + "\n"
-        for key in self.info:
-            if key == "PIN":
-                s += "    " + key + ":\n"
-                for pin in self.info[key]:
-                    s += "    " + str(pin) + "\n"
-            else:
-                s += "    " + key + ": " + str(self.info[key]) + "\n"
+        for key, value in self.info.items():
+            if key != "PIN":
+                s += "    " + key + ": " + str(value) + '\n'
+        s += "    PIN:\n"
+        for name, pin in self.pin_dict.items():
+            s += "        " + name + ':\n'
+            s += "            " + str(pin) + '\n'
         return s
 
     def parse_next(self, data):
@@ -140,9 +140,8 @@ class Pin(Statement):
         self.info = {}
 
     def __str__(self):
-        s = ""
-        for layer in self.info["PORT"].info["LAYER"]:
-            s += layer.type + " " + layer.name + "\n"
+        s = "DIRECTION: " + self.info["DIRECTION"] + '\n'
+        s += "            Port\n" + str(self.info["PORT"])
         return s
 
     def parse_next(self, data):
@@ -182,6 +181,14 @@ class Port(Statement):
         self.type = "PORT"
         self.name = ""
         self.info = {}
+    
+    def __str__(self):
+        s = ""
+        for layer in self.info["LAYER"]:
+            s += "              " + "LAYER " + layer.name + '\n'
+            for shape in layer.shapes:
+                s += str(shape)
+        return s    
 
     def parse_next(self, data):
         if data[0] == "END":
@@ -297,8 +304,12 @@ class Rect:
     def __init__(self, points):
         self.type = "RECT"
         self.points = points
-
-
+    
+    def __str__(self):
+        s = ""
+        for sublist in self.points:
+            s += "              " + self.type + ' ' + ' '.join(str(point) for point in sublist) + '\n'
+        return s
 class Polygon:
     """
     Class Polygon represents a Polygon definition in a LayerDef
@@ -306,7 +317,9 @@ class Polygon:
     def __init__(self, points):
         self.type = "POLYGON"
         self.points = points
-
+    
+    def __str__(self):
+        return "              " + self.type + ' ' + ' '.join(str(point) for sublist in self.points for point in sublist)
 
 class Layer(Statement):
     """

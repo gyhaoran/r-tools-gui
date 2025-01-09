@@ -68,7 +68,10 @@ class LefDscp():
                     else:
                         self.stack.append(nextState)
             self.get_cell_height()
-
+    
+    def macro_info(self, name):
+        return self.macros.get(name, 'No Macro ' + name)
+    
 
 def parse_lef_file(lef_file):
     lef_dscp = LefDscp()

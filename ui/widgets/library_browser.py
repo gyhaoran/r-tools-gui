@@ -4,7 +4,7 @@ import os
 import qtawesome as qta
 from .lef_macro_view import LefMacroView
 from core import library_manager, LibraryManager
-from ui.dialogs import MacroScoreDialog, PinScoreDialog
+from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog
 from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
@@ -33,6 +33,7 @@ class LibraryBrowser(QDockWidget):
 
     
     def setup_models(self, cell_names):
+        self.model.clear()
         for name in cell_names:
             item = QStandardItem(name)
             item.setEditable(False)
@@ -56,10 +57,14 @@ class LibraryBrowser(QDockWidget):
         copy_name_action = QAction(qta.icon('msc.copy'), "Copy Name", self)
         calc_macro_score_action = QAction(qta.icon('msc.type-hierarchy'), "Calc Macro Score", self)
         calc_pin_score_action = QAction(qta.icon('msc.pin'), "Calc Pin Score", self)
+        show_infos = QAction(qta.icon('msc.info'), 'Show Details', self)
 
         menu.addAction(copy_name_action)
+        menu.addSeparator()
         menu.addAction(calc_macro_score_action)
         menu.addAction(calc_pin_score_action)
+        menu.addSeparator()
+        menu.addAction(show_infos)
 
         action = menu.exec_(self.list_view.mapToGlobal(position))
 
@@ -69,6 +74,8 @@ class LibraryBrowser(QDockWidget):
             self.calc_macro_score(index)
         elif action == calc_pin_score_action:
             self.calc_pin_score(index)
+        elif action == show_infos:
+            self.show_macro_infos(index)
 
     def copy_name(self, index):
         item = self.model.itemFromIndex(index)
@@ -85,7 +92,6 @@ class LibraryBrowser(QDockWidget):
             dialog = MacroScoreDialog(data, self)
             dialog.exec_()
 
-
     def calc_pin_score(self, index):
         item = self.model.itemFromIndex(index)
         if item:
@@ -94,7 +100,14 @@ class LibraryBrowser(QDockWidget):
             data = {macro_name: score}
             dialog = PinScoreDialog(data, self)
             dialog.exec_()
-    
+
+    def show_macro_infos(self, index):
+        item = self.model.itemFromIndex(index)
+        if item:
+            macro = library_manager().get_macro_info(item.text())
+            dialog = MacroInfoDialog(macro, self)
+            dialog.exec_()
+               
     # Observer method, python use duck type
     def update(self):
         self.setup_models(library_manager().get_all_macros())

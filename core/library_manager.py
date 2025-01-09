@@ -76,6 +76,9 @@ class LibraryManager(Subject):
     def get_all_macros(self):
         return self.lef_dscp.macros.keys() if self.lef_dscp else []
     
+    def get_macro_info(self, name):
+        return self.lef_dscp.macro_info(name)
+    
     @staticmethod
     def get_instance():
         """Static method to get the single instance of LibraryManager"""

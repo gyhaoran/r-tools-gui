@@ -104,12 +104,14 @@ class MainWindow(QMainWindow):
         view_menu = QMenu('View', self)
         lib_action = self.create_checked_action('Library', M_VIEW_LIBRARY_ICON, self.show_cells)
         macro_action = self.create_checked_action('Macro View', M_VIEW_MACRO_VIEW_ICON, self.show_macro_view)
+        
         self.circuit_action = self.create_checked_action('Circuit', M_VIEW_CIRCUIT_ICON, self.show_circuit)
         self.circuit_action.setDisabled(True)        
         self.layout_action = self.create_checked_action('Layout', M_VIEW_LAYOUT_ICON, self.show_layout)
         self.layout_action.setDisabled(True)
         self.layers_action = self.create_checked_action('Layers', M_VIEW_LAYERS_ICON, self.show_layers)
         self.layers_action.setDisabled(True)
+        
         view_actions= [lib_action, macro_action, self.circuit_action, self.layout_action, self.layers_action]
         view_menu.addActions(view_actions)
         action_manager().add_actions(ACTION_TOOL_BAR, view_actions)
