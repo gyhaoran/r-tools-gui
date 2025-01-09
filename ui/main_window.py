@@ -86,8 +86,9 @@ class MainWindow(QMainWindow):
         
         self.pin_assess_action = self.create_action('PinAssess', M_TOOLS_PIN_ASSESS_ICON, self.assess_pin)
         self.macro_assess_action = self.create_action('MacroAssess', M_TOOLS_MACRO_COST_ICON, self.assess_macro)
+        self.pin_density_action = self.create_action('PinAssess', M_TOOLS_PIN_DENSITY_ICON, self.assess_pin_density)
         
-        tool_actions = [seprator, self.pin_assess_action, self.macro_assess_action]
+        tool_actions = [seprator, self.pin_assess_action, self.macro_assess_action, self.pin_density_action]
         tools_menu.addActions(tool_actions)
         
         tools_menu.addSeparator()
@@ -251,6 +252,11 @@ class MainWindow(QMainWindow):
     def assess_macro(self):
         data = library_manager().calc_macro_score(None)
         dialog = MacroScoreDialog(data, self)
+        dialog.exec_()
+
+    def assess_pin_density(self):
+        data = library_manager().calc_pin_density(None)
+        dialog = PinDestinyDialog(data, self)
         dialog.exec_()
         
     def show_settings(self, index=0):

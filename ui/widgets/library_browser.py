@@ -4,7 +4,7 @@ import os
 import qtawesome as qta
 from .lef_macro_view import LefMacroView
 from core import library_manager, LibraryManager
-from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog
+from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog, PinDestinyDialog
 from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
@@ -55,14 +55,14 @@ class LibraryBrowser(QDockWidget):
         menu = QMenu(self.list_view)
 
         copy_name_action = QAction(qta.icon('msc.copy'), "Copy Name", self)
-        calc_macro_score_action = QAction(qta.icon('msc.type-hierarchy'), "Calc Macro Score", self)
-        calc_pin_score_action = QAction(qta.icon('msc.pin'), "Calc Pin Score", self)
+        macro_score_action = QAction(qta.icon('msc.type-hierarchy'), "Calc Macro Score", self)
+        pin_score_action = QAction(qta.icon('msc.pin'), "Calc Pin Score", self)
+        pin_destiny_action = QAction(qta.icon('msc.pinned'), "Calc Pin Detiny", self)
         show_infos = QAction(qta.icon('msc.info'), 'Show Details', self)
 
         menu.addAction(copy_name_action)
         menu.addSeparator()
-        menu.addAction(calc_macro_score_action)
-        menu.addAction(calc_pin_score_action)
+        menu.addActions([macro_score_action, pin_score_action, pin_destiny_action])
         menu.addSeparator()
         menu.addAction(show_infos)
 
@@ -70,10 +70,12 @@ class LibraryBrowser(QDockWidget):
 
         if action == copy_name_action:
             self.copy_name(index)
-        elif action == calc_macro_score_action:
+        elif action == macro_score_action:
             self.calc_macro_score(index)
-        elif action == calc_pin_score_action:
+        elif action == pin_score_action:
             self.calc_pin_score(index)
+        elif action == pin_destiny_action:
+            self.calc_pin_destiny(index)
         elif action == show_infos:
             self.show_macro_infos(index)
 
@@ -99,6 +101,14 @@ class LibraryBrowser(QDockWidget):
             score = library_manager().calc_pin_score(macro_name)
             data = {macro_name: score}
             dialog = PinScoreDialog(data, self)
+            dialog.exec_()
+
+    def calc_pin_destiny(self, index):
+        item = self.model.itemFromIndex(index)
+        if item:
+            macro_name = item.text()
+            data = library_manager().calc_pin_density(macro_name)
+            dialog = PinDestinyDialog(data, self)
             dialog.exec_()
 
     def show_macro_infos(self, index):

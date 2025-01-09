@@ -3,7 +3,7 @@ import pacpy
 from .observe import Subject
 from .setting_manager import setting_manager, SettingManager
 from backend.lef_parser import LefDscp, parse_lef_file
-
+from .pin_destiny import calc_pin_density
 
 class LibraryManager(Subject):
     _instance = None
@@ -63,7 +63,10 @@ class LibraryManager(Subject):
         score = pacpy.calc_pin_score(json.dumps(base_input))
         pin_scores = json.loads(score)
         return pin_scores.get(macro_name, {}) if macro_name else pin_scores
-        
+
+    def calc_pin_density(self, macro_name=None):
+        return calc_pin_density(self.lef_dscp.macros, macro_name) if self.lef_dscp else {}
+            
     def load_def_file(self, def_file):
         pass
     
