@@ -11,6 +11,20 @@ from PyQt5.QtCore import Qt
 
 
 class NewProjectDialog(QDialog):
+    QSS_STYLE_CREATE = """
+            QPushButton {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                color: white;
+            }
+            QPushButton:enabled {
+                background-color: #4CAF50; /* Green background when enabled */
+            }
+            QPushButton:disabled {
+                background-color: #D3D3D3; /* Gray background when disabled */
+            }
+        """
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("New Project")
@@ -107,20 +121,7 @@ class NewProjectDialog(QDialog):
     def setup_create_button(self):
         """Setup the create button and its layout."""
         self.create_btn = QPushButton("Create", self)
-        self.create_btn.setStyleSheet("""
-            QPushButton {
-                padding: 8px 16px;
-                border: none;
-                border-radius: 4px;
-                color: white;
-            }
-            QPushButton:enabled {
-                background-color: #4CAF50; /* Green background when enabled */
-            }
-            QPushButton:disabled {
-                background-color: #D3D3D3; /* Gray background when disabled */
-            }
-        """)
+        self.create_btn.setStyleSheet(self.QSS_STYLE_CREATE)
         self.create_btn.clicked.connect(self.create_project)
 
         # Create a horizontal layout for the Create button
@@ -169,7 +170,6 @@ class NewProjectDialog(QDialog):
         self.create_btn.setEnabled(all_fields_filled)
 
     def create_project(self):
-        """Create a new project and save its configuration."""
         project_name = self.project_name.text()
         location = self.location_input.text()
         tech_file = self.tech_file_input.text()
@@ -179,15 +179,9 @@ class NewProjectDialog(QDialog):
         if os.path.exists(project_file):
             self.show_fail_info('Project exists, creation failed')
             return
-
         try:
             with open(project_file, 'w', encoding='utf-8') as f:
-                project = {
-                    'project_name': project_name,
-                    'path': location,
-                    'tech_file': tech_file,
-                    'netlist_file': netlist_file
-                }
+                project = {'project_name': project_name, 'path': location,'tech_file': tech_file, 'netlist_file': netlist_file}
                 json.dump(project, f)
             self.close()
         except Exception as e:

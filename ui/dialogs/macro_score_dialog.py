@@ -19,7 +19,6 @@ class MacroScoreDialog(QDialog):
         self.update_table(data)
 
     def _setup_ui(self):
-        """Set up the UI components."""
         self.setWindowTitle("Macro Assessment")
         self.setWindowIcon(qta.icon(M_TOOLS_MACRO_COST_ICON))
         self.setMinimumWidth(400)
@@ -31,19 +30,16 @@ class MacroScoreDialog(QDialog):
 
         title_label = self._create_title_label()
         main_layout.addWidget(title_label)
-
         self.table = self._create_table()
         main_layout.addWidget(self.table)
 
     def _create_title_label(self):
-        """Create and configure the title label."""
         title_label = QLabel("Macro Scores", self)
         title_label.setFont(QFont("Roboto", 14, QFont.Bold))
         title_label.setAlignment(Qt.AlignCenter)
         return title_label
 
     def _create_table(self):
-        """Create and configure the QTableWidget."""
         table = QTableWidget(self)
         table.setColumnCount(2)
         table.setHorizontalHeaderLabels(["Macro Name", "Score"])
@@ -54,14 +50,12 @@ class MacroScoreDialog(QDialog):
         return table
 
     def update_table(self, data):
-        """Update the table with new data."""
         self.table.setRowCount(len(data))
         for row, (macro_name, score) in enumerate(data.items()):
             self._add_table_row(row, macro_name, score)
         self.table.sortItems(1, Qt.AscendingOrder)
 
     def _add_table_row(self, row, macro_name, score):
-        """Add a row to the table."""
         name_item = QTableWidgetItem(macro_name)
         name_item.setTextAlignment(Qt.AlignCenter)
         self.table.setItem(row, 0, name_item)
