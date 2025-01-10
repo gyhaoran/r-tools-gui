@@ -1,7 +1,6 @@
 from .settingpages import *
 from ui.icons import *
 from core import setting_manager, SettingManager
-
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -19,34 +18,44 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Settings")
         self.setMinimumSize(600, 400)
 
-        main_layout = QVBoxLayout(self)
-
+        self.main_layout = QVBoxLayout(self)
         self.tabs = QTabWidget()
-        main_layout.addWidget(self.tabs)
+        self.main_layout.addWidget(self.tabs)
 
+        self.setup_tabs(tab_index)
+        self.setup_buttons()
+
+    def setup_tabs(self, tab_index):
+        """Initialize and add tabs to the dialog."""
         self.general_tab = GeneralSettingsPage(self)
-        self.tabs.addTab(self.general_tab, "General Settings")
-        self.tabs.setTabIcon(0, qta.icon(M_TOOLS_SETTINGS_ICON))
-        
+        self.add_tab(self.general_tab, "General Settings", M_TOOLS_SETTINGS_ICON)
+
         pac_rules = setting_manager().pac_rules
         drc_rules = setting_manager().drc_rules
 
         self.pin_rule_tab = PinAssessRulePage(pac_rules, setting_manager().pac, parent=self)
-        self.tabs.addTab(self.pin_rule_tab, "PAC Rule")
-        self.tabs.setTabIcon(1, qta.icon(M_TOOLS_PIN_RULE_ICON))
-        self.pin_rule_tab.rule_added.connect(self.update_settings)
-        self.pin_rule_tab.rule_deleted.connect(self.update_settings)
-        self.pin_rule_tab.rule_changed.connect(lambda is_modified: self.update_tab_title(1, is_modified))
-        
+        self.add_tab(self.pin_rule_tab, "PAC Rule", M_TOOLS_PIN_RULE_ICON)
+        self.connect_rule_signals(self.pin_rule_tab, 1)
+
         self.drc_rule_tab = DrcRulePage(drc_rules, setting_manager().drc, parent=self)
-        self.tabs.addTab(self.drc_rule_tab, "DRC Rule")
-        self.tabs.setTabIcon(2, qta.icon(M_TOOLS_DRC_RULE_ICON))
-        self.drc_rule_tab.rule_added.connect(self.update_settings)
-        self.drc_rule_tab.rule_deleted.connect(self.update_settings)
-        self.drc_rule_tab.rule_changed.connect(lambda is_modified: self.update_tab_title(2, is_modified))
+        self.add_tab(self.drc_rule_tab, "DRC Rule", M_TOOLS_DRC_RULE_ICON)
+        self.connect_rule_signals(self.drc_rule_tab, 2)
 
         self.tabs.setCurrentIndex(tab_index)
 
+    def add_tab(self, widget, title, icon):
+        """Add a tab with the given widget, title, and icon."""
+        self.tabs.addTab(widget, title)
+        self.tabs.setTabIcon(self.tabs.count() - 1, qta.icon(icon))
+
+    def connect_rule_signals(self, rule_tab, tab_index):
+        """Connect signals for rule tabs."""
+        rule_tab.rule_added.connect(self.update_settings)
+        rule_tab.rule_deleted.connect(self.update_settings)
+        rule_tab.rule_changed.connect(lambda is_modified: self.update_tab_title(tab_index, is_modified))
+
+    def setup_buttons(self):
+        """Initialize and add buttons to the dialog."""
         button_layout = QHBoxLayout()
         save_button = QPushButton("Save")
         save_button.clicked.connect(self.save_settings)
@@ -55,8 +64,8 @@ class SettingsDialog(QDialog):
         button_layout.addStretch()
         button_layout.addWidget(save_button)
         button_layout.addWidget(cancel_button)
-        main_layout.addLayout(button_layout)
-        
+        self.main_layout.addLayout(button_layout)
+
     def update_tab_title(self, tab_index, is_modified):
         """Update the tab title to indicate unsaved changes."""
         tab_text = self.tabs.tabText(tab_index)
@@ -66,29 +75,30 @@ class SettingsDialog(QDialog):
             self.tabs.setTabText(tab_index, tab_text.rstrip(" *"))
 
     def update_settings(self, rule_name=None):
+        """Update settings in the setting manager."""
         general_rule = self.general_tab.get_settings()
         pac_rule = self.pin_rule_tab.get_settings()
         drc_rule = self.drc_rule_tab.get_settings()
         setting_manager().update_cur_settings(general_rule, pac_rule, drc_rule)
-        
+
         pac_rules = self.pin_rule_tab.export_pac_rules()
         drc_rules = self.drc_rule_tab.export_drc_rules()
         setting_manager().update_settings(pac_rules, drc_rules)
-        
+
     def save_settings(self):
-        """save settings"""
+        """Save settings and update the UI."""
         self.pin_rule_tab.save()
         self.drc_rule_tab.save()
-        
         self.update_settings()
 
         for index in range(self.tabs.count()):
             self.update_tab_title(index, is_modified=False)
-    
+
     @property
     def _is_modified(self):
+        """Check if any tab has unsaved changes."""
         return self.pin_rule_tab.is_modified or self.drc_rule_tab.is_modified
-    
+
     def on_cancel(self):
         """Handle the Cancel button click."""
         if self._is_modified:
@@ -101,7 +111,6 @@ class SettingsDialog(QDialog):
                 return  # User chose not to cancel
         self.reject()  # Close the dialog
 
-        
     def closeEvent(self, event):
         """Override closeEvent to handle unsaved changes."""
         if self._is_modified:
@@ -119,3 +128,4 @@ class SettingsDialog(QDialog):
                 event.ignore()  # Cancel the close operation
         else:
             event.accept()  # No unsaved changes, close the dialog
+            

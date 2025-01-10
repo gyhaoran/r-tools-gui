@@ -23,7 +23,7 @@ def extract_pin_positions(macro):
     """
     pin_positions = []
     for pin in macro.pin_dict.values():
-        if pin.info.get("USE", "").upper() in ["POWER", "GROUND", "power", "ground"]:
+        if pin.info.get("USE", "").upper() in ["POWER", "GROUND"]:
             continue  # Skip VDD and VSS
         
         port = pin.info.get("PORT")

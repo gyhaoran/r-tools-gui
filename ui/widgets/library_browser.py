@@ -30,7 +30,6 @@ class LibraryBrowser(QDockWidget):
         self.list_view.customContextMenuRequested.connect(self.show_context_menu)
                 
         layout.addWidget(self.list_view)
-
     
     def setup_models(self, cell_names):
         self.model.clear()
