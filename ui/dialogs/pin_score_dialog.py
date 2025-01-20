@@ -22,8 +22,7 @@ class PinScoreDialog(QDialog):
         """Set up the UI components."""
         self.setWindowTitle("Pin Assessment")
         self.setWindowIcon(qta.icon(M_TOOLS_PIN_ASSESS_ICON))
-        self.setMinimumWidth(400)
-        self.setMinimumHeight(400)
+        self.setMinimumWidth(300)
         self.setFont(QFont("Roboto", 10))
 
         main_layout = QVBoxLayout(self)

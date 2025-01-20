@@ -13,6 +13,7 @@ class LefMacroView(QWidget):
         self.text_color = '#000000'  # Default text color (black for light mode)
         self.init_ui()
         self.set_theme(False)  # Assuming light mode is the default
+        self.setMinimumWidth(350)
 
     def init_ui(self):
         """Initialize the UI components."""

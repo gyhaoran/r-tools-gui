@@ -3,14 +3,16 @@ from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, Q
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
 from .lef_macro_view import LefMacroView
+from .pin_assess_view import PinAssessView
 from core import library_manager
 from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog, PinDestinyDialog
 
 
 class LibraryBrowser(QDockWidget):
-    def __init__(self, macro_view: LefMacroView, parent=None):
-        super().__init__("Library Browser", parent=parent)
+    def __init__(self, macro_view: LefMacroView, pin_assess_view: PinAssessView, parent=None):
+        super().__init__("Macro Browser", parent=parent)
         self.macro_view = macro_view
+        self.pin_assess_view = pin_assess_view
 
         # Define action handlers as a class member
         self.action_handlers = {
@@ -38,6 +40,8 @@ class LibraryBrowser(QDockWidget):
         self.list_view.customContextMenuRequested.connect(self.show_context_menu)
 
         layout.addWidget(self.list_view)
+        self.setMinimumWidth(200)
+        self.setMaximumWidth(350)
 
     def setup_models(self, cell_names):
         """Setup the model with the given cell names."""
@@ -52,7 +56,11 @@ class LibraryBrowser(QDockWidget):
             return
         item = self.model.itemFromIndex(index)
         if item:
-            self.macro_view.draw_cells([item.text()])
+            macro_name = item.text()
+            self.macro_view.draw_cells([macro_name])
+            self.pin_assess_view.load(library_manager().calc_pin_density(macro_name), 
+                                      library_manager().calc_macro_score(macro_name),
+                                      library_manager().calc_pin_score(macro_name))
 
     def show_context_menu(self, position):
         """Show a context menu at the given position."""
@@ -100,14 +108,12 @@ class LibraryBrowser(QDockWidget):
         clipboard.setText(macro_name)
 
     def calc_macro_score(self, macro_name):
-        score = library_manager().calc_macro_score(macro_name)
-        data = {macro_name: score}
+        data = library_manager().calc_macro_score(macro_name)
         dialog = MacroScoreDialog(data, self)
         dialog.exec_()
 
     def calc_pin_score(self, macro_name):
-        score = library_manager().calc_pin_score(macro_name)
-        data = {macro_name: score}
+        data = library_manager().calc_pin_score(macro_name)
         dialog = PinScoreDialog(data, self)
         dialog.exec_()
 
@@ -123,3 +129,4 @@ class LibraryBrowser(QDockWidget):
 
     def update(self):
         self.setup_models(library_manager().get_all_macros())
+        self.pin_assess_view.clear()

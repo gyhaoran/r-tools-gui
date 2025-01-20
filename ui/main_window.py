@@ -23,8 +23,10 @@ class MainWindow(QMainWindow):
         
         self._init_manager()
 
+        self.macro_browser = None
         self.macro_view = None
-        self.library_browser = None
+        self.pin_assess_view = None
+        
         self.schematic_view = None
         self.view_browser = None
         self.layers = None
@@ -97,8 +99,16 @@ class MainWindow(QMainWindow):
         tools_menu.addActions([settings_action, pin_rule_action, drc_rule_action])
 
         tool_actions.append(pin_rule_action)
+        
+        action = self.create_action('', 'fa.bell-o', self.show_info)
+        tool_actions.append(action)
+        
         action_manager().add_actions(ACTION_TOOL_BAR, tool_actions)
         return tools_menu
+    
+    def show_info(self):
+        print(f"mainwindow size: {self.size()}")
+        print(f"macro_browser: {self.macro_browser.size()}, macro_view: {self.macro_view.size()}, pin_view: {self.pin_assess_view.size()}")
 
     def create_view_menu(self):
         view_menu = QMenu('View', self)
@@ -167,10 +177,13 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
         library_manager().add_observer(self.macro_view)
 
-        self.library_browser = LibraryBrowser(self.macro_view)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.library_browser)
-        library_manager().add_observer(self.library_browser)
-
+        self.pin_assess_view = PinAssessView(self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.pin_assess_view)
+        
+        self.macro_browser = LibraryBrowser(self.macro_view, self.pin_assess_view)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.macro_browser)
+        library_manager().add_observer(self.macro_browser)
+        
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
 
@@ -213,7 +226,7 @@ class MainWindow(QMainWindow):
             widget.hide()
 
     def show_cells(self):
-        self.show_widgets(self.library_browser)
+        self.show_widgets(self.macro_browser)
 
     def show_macro_view(self):
         self.show_widgets(self.macro_view)

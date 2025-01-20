@@ -15,11 +15,11 @@ class CorePlugin:
         return descp
 
     def load(self):
-        print(f"CorePlugin loaded, plugin info {self.descp}")
+        # print(f"CorePlugin loaded, plugin info {self.descp}")
         self.descp['loaded'] = True
 
     def unload(self):
-        print("CorePlugin unloaded.")
+        # print("CorePlugin unloaded.")
         self.descp['loaded'] = False
     
     def is_load(self):

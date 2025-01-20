@@ -21,7 +21,7 @@ class MacroScoreDialog(QDialog):
     def _setup_ui(self):
         self.setWindowTitle("Macro Assessment")
         self.setWindowIcon(qta.icon(M_TOOLS_MACRO_COST_ICON))
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(300)
         self.setFont(QFont("Roboto", 10))
 
         main_layout = QVBoxLayout(self)

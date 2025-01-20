@@ -53,7 +53,7 @@ class LibraryManager(Subject):
         
         score = pacpy.calc_macro_score(json.dumps(base_input))
         macro_scores = json.loads(score)
-        return macro_scores.get(macro_name, None) if macro_name else macro_scores
+        return {macro_name: macro_scores.get(macro_name, None)} if macro_name else macro_scores
     
     def calc_pin_score(self, macro_name=None):        
         base_input = self._get_base_pac_input()    
@@ -62,7 +62,7 @@ class LibraryManager(Subject):
         base_input["expand"] = self.pac_rule.get('expand', True)
         score = pacpy.calc_pin_score(json.dumps(base_input))
         pin_scores = json.loads(score)
-        return pin_scores.get(macro_name, {}) if macro_name else pin_scores
+        return {macro_name: pin_scores.get(macro_name, {})} if macro_name else pin_scores
 
     def calc_pin_density(self, macro_name=None):
         return calc_pin_density(self.lef_dscp.macros, macro_name) if self.lef_dscp else {}

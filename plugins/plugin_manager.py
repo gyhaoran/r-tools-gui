@@ -34,7 +34,7 @@ class PluginManager:
             plugin_instance = plugin_class(self.main_window) if pass_main_window else plugin_class()
             plugin_instance.load()
             self.plugins.append(plugin_instance)
-            print(f"Plugin {plugin_name} loaded successfully.")
+            # print(f"Plugin {plugin_name} loaded successfully.")
         except Exception as e:
             print(f"Failed to load plugin {plugin_name}: {e}")
 
