@@ -1,0 +1,8 @@
+{
+    "name": "PacPlugin",
+    "version": "0.0.9",
+    "vendor": "iCell",
+    "description": "PAC Tools plugin, for pin assessment.",
+    "dependencies": ["CorePlugin"],
+    "loaded": true
+}

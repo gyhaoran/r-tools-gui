@@ -5,7 +5,7 @@ import qtawesome as qta
 from .icons import *
 from .widgets import *
 from .dialogs import *
-from core import setting_manager, library_manager, action_manager, ACTION_TOOL_BAR
+from core import *
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -20,6 +20,8 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
         self.is_dark_theme = False
+        
+        self._init_manager()
 
         self.macro_view = None
         self.library_browser = None
@@ -31,25 +33,27 @@ class MainWindow(QMainWindow):
         self.create_tool_bar()
         self.create_status_bar()
         self.create_central_widget()
+        
+    def _init_manager(self):
+        create_menu_manager(self.menuBar())
 
     def update_toolbar_status(self):
         pass
 
     def create_menu_bar(self):
-        menubar = self.menuBar()
         file_menu = self.create_file_menu()
         view_menu = self.create_view_menu()
         tools_menu = self.create_tools_menu()
         place_menu = self.create_place_menu()
         route_menu = self.create_route_menu()
         help_menu = self.create_help_menu()
-
-        menubar.addMenu(file_menu)
-        menubar.addMenu(view_menu)
-        menubar.addMenu(tools_menu)
-        menubar.addMenu(place_menu)
-        menubar.addMenu(route_menu)
-        menubar.addMenu(help_menu)
+        
+        menu_manager().add_menu(M_FILE_ID, file_menu)
+        menu_manager().add_menu(M_VIEW_ID, view_menu)
+        menu_manager().add_menu(M_TOOLS_ID, tools_menu)
+        menu_manager().add_menu(M_PLACE_ID, place_menu)
+        menu_manager().add_menu(M_ROUTE_ID, route_menu)
+        menu_manager().add_menu(M_HELP_ID, help_menu)
 
     def create_help_menu(self):
         help_menu = QMenu('Help', self)
