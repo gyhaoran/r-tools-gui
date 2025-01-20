@@ -99,16 +99,8 @@ class MainWindow(QMainWindow):
         tools_menu.addActions([settings_action, pin_rule_action, drc_rule_action])
 
         tool_actions.append(pin_rule_action)
-        
-        action = self.create_action('', 'fa.bell-o', self.show_info)
-        tool_actions.append(action)
-        
         action_manager().add_actions(ACTION_TOOL_BAR, tool_actions)
         return tools_menu
-    
-    def show_info(self):
-        print(f"mainwindow size: {self.size()}")
-        print(f"macro_browser: {self.macro_browser.size()}, macro_view: {self.macro_view.size()}, pin_view: {self.pin_assess_view.size()}")
 
     def create_view_menu(self):
         view_menu = QMenu('View', self)

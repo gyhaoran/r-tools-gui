@@ -52,8 +52,8 @@ class PinScoreDialog(QDialog):
         tree.setSortingEnabled(True)  # Enable sorting
 
         header = tree.header()
-        header.setSectionResizeMode(0, QHeaderView.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
         return tree
 
     def update_tree(self, data):
