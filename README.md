@@ -11,8 +11,8 @@ ID   | Funtions                  | Priority |   Status
 6    | Open Project Interface    | Medium   |    Pending
 
 
-## Code Quality
-Date  |  Total nloc  |  Avg.NLOC  |  Avg.CCN
----   |  ---         |  ---       |  ---
-1-10  |  1680        |  6.0       |  1.4      
-
+## Code Metrics
+Date  |  Total nloc  |  Avg.NLOC  |  Avg.CCN |  Version
+---   |  ---         |  ---       |  ---     |  ---
+1-10  |  1680        |  6.0       |  1.4     |  0.0.1-alpaha
+1-22  |  1985        |  5.3       |  1.4     |  0.0.1

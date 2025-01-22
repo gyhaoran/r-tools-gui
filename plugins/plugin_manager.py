@@ -4,21 +4,17 @@ import os
 class PluginManager:
     def __init__(self, main_window):
         self.main_window = main_window
-        self.plugins = []
+        self.plugins = {}
+        self.plugins_path = os.path.dirname(__file__)        
 
     def load_plugins(self):
-        """Load CorePlugin first, then load all non-core plugins."""
-        # Load CorePlugin
-        self._load_plugin("core_plugin", True)
+        """Load all plugins"""
+        for plugin_name in os.listdir(self.plugins_path):
+            if self._is_plugin(plugin_name):
+                self._load_plugin(plugin_name, True)
 
-        # Load non-core plugins
-        plugins_dir = os.path.dirname(__file__)
-        for plugin_name in os.listdir(plugins_dir):
-            if plugin_name == "core_plugin" or plugin_name == "__pycache__" or \
-                not os.path.isdir(os.path.join(plugins_dir, plugin_name)):
-                continue  # Skip core_plugin and non-directory files
-            self._load_plugin(plugin_name, True)
-
+    def _is_plugin(self, plugin_name) -> bool:
+        return os.path.isdir(os.path.join(self.plugins_path, plugin_name)) and plugin_name != "__pycache__"
 
     def _load_plugin(self, plugin_name, pass_main_window=False):
         """Load a plugin by name.        
@@ -33,14 +29,18 @@ class PluginManager:
             # Pass main_window only if required
             plugin_instance = plugin_class(self.main_window) if pass_main_window else plugin_class()
             plugin_instance.load()
-            self.plugins.append(plugin_instance)
-            # print(f"Plugin {plugin_name} loaded successfully.")
+            self.plugins[plugin_instance.name()] = plugin_instance
         except Exception as e:
             print(f"Failed to load plugin {plugin_name}: {e}")
 
+    def unload_plugin(self, plugin_name):
+        """Unload a specfic plugin."""
+        plugin = self.plugins.pop(plugin_name, None)
+        if plugin:
+            plugin.unload()
+
     def unload_plugins(self):
         """Unload all plugins."""
-        for plugin in self.plugins:
+        for _, plugin in self.plugins.items():
             plugin.unload()
-            print(f"Plugin {plugin.__class__.__name__} unloaded.")
         self.plugins.clear()

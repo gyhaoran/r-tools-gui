@@ -22,3 +22,14 @@ class PacPlugin:
     def is_load(self):
         return self.descp['loaded']
     
+    def name(self):
+        return self.descp['name']
+    
+    def version(self):
+        return self.descp['version']
+    
+    def desp(self):
+        return self.descp['description']
+    
+    def vendor(self):
+        return self.descp['vendor']
