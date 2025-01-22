@@ -1,4 +1,4 @@
-from ui.dialogs import *
+from .dialogs import *
 from core.window import AbstractWindow, W_PIN_ASSESS_ID
 
 from PyQt5.QtWidgets import (

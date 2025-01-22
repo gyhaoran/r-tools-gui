@@ -6,7 +6,8 @@ from .icons import *
 from .widgets import *
 from .dialogs import *
 from core import *
-from core.window import window_manager, WindowManager
+from plugins.pac_plugin.ui.dialogs import *
+
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -76,23 +77,9 @@ class MainWindow(QMainWindow):
         tools_menu = QMenu('Tools', self)
         toolbar_action = self.create_action('ToolBars', M_TOOLS_TOOLBAR_ICON, self.toggle_toolbar)
         tools_menu.addAction(toolbar_action)
-        seprator = tools_menu.addSeparator()
-
-        self.pin_assess_action = self.create_action('PinAssess', M_TOOLS_PIN_ASSESS_ICON, self.assess_pin)
-        self.macro_assess_action = self.create_action('MacroAssess', M_TOOLS_MACRO_COST_ICON, self.assess_macro)
-        self.pin_density_action = self.create_action('PinDensity', M_TOOLS_PIN_DENSITY_ICON, self.assess_pin_density)
-
-        tool_actions = [seprator, self.pin_assess_action, self.macro_assess_action, self.pin_density_action]
-        tools_menu.addActions(tool_actions)
-
         tools_menu.addSeparator()
         settings_action = self.create_action('Settings', M_TOOLS_SETTINGS_ICON, self.show_settings)
-        pin_rule_action = self.create_action('Pin Assess Rule', M_TOOLS_PIN_RULE_ICON, lambda: self.show_settings(1))
-        drc_rule_action = self.create_action('Drc Rule', M_TOOLS_DRC_RULE_ICON, lambda: self.show_settings(2))
-        tools_menu.addActions([settings_action, pin_rule_action, drc_rule_action])
-
-        tool_actions.append(pin_rule_action)
-        action_manager().add_actions(ACTION_TOOL_BAR, tool_actions)
+        tools_menu.addAction(settings_action)
         return tools_menu
 
     def create_view_menu(self):
@@ -109,7 +96,7 @@ class MainWindow(QMainWindow):
 
         view_actions = [lib_action, macro_action, self.circuit_action, self.layout_action, self.layers_action]
         view_menu.addActions(view_actions)
-        action_manager().add_actions(ACTION_TOOL_BAR, view_actions)
+        toolbar_manager().add_actions(TOOLBAR_VIEW, view_actions)
         return view_menu
 
     def create_file_menu(self):
@@ -122,11 +109,11 @@ class MainWindow(QMainWindow):
         exit_action = self.create_action('Exit...', M_FILE_EXIT_ICON, self.exit_app)
 
         file_menu.addActions([new_action, open_action])
-        seprator = file_menu.addSeparator()
+        file_menu.addSeparator()
         file_menu.addActions([save_action, save_as_action, close_action])
         file_menu.addSeparator()
         file_menu.addAction(exit_action)
-        action_manager().add_actions(ACTION_TOOL_BAR, [new_action, open_action, save_action, seprator])
+        toolbar_manager().add_actions(TOOLBAR_FILE, [new_action, open_action, save_action])
         return file_menu
 
     def create_action(self, name, icon, function, checkable=False, checked=False):
@@ -140,9 +127,11 @@ class MainWindow(QMainWindow):
         return self.create_action(name, icon, function, True, checked)
 
     def create_tool_bar(self):
-        self.debug()
-        self.toolbar = ToolBar(action_manager().get_action(ACTION_TOOL_BAR), parent=self)
-        self.addToolBar(self.toolbar)
+        self.tool_bar = ToolBar("Main ToolBar", self)
+        self.tool_bar.add_group(TOOLBAR_FILE)
+        self.tool_bar.add_group(TOOLBAR_VIEW)
+        self.tool_bar.add_group(TOOLBAR_TOOLS)
+        self.addToolBar(Qt.TopToolBarArea, self.tool_bar)
 
     def create_status_bar(self):
         status_bar = QStatusBar(self)
@@ -272,8 +261,3 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         setting_manager().save_settings()
         event.accept()
-
-    def debug(self):
-        action = self.create_action('', 'fa.bell-o', lambda : window_manager().print(self))
-        action_manager().add_action(ACTION_TOOL_BAR, action)
-        

@@ -33,10 +33,6 @@ class WindowManager:
                 mainwindow.setContentsMargins(0, 0, 0, 0)
             else:
                 mainwindow.addDockWidget(window.area(), window.widget())
-    
-    def print(self, mainwindow):
-        for win_id, window in self.windows.items():
-            print(win_id, ": ", mainwindow.dockWidgetArea(window.widget()))
 
     @staticmethod
     def get_instance():

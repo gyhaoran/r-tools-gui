@@ -3,9 +3,9 @@ from .lef_macro_window import LefMacroWindow
 from .pin_assess_window import PinAssessWindow
 from core import library_manager
 from core.window import AbstractWindow, W_LIB_BROWSER_ID
-from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog, PinDestinyDialog
+from .dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog, PinDestinyDialog
 
-from PyQt5.QtWidgets import QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
+from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import Qt
 

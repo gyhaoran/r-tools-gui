@@ -1,1 +1,1 @@
-from .window import register_windows
+# from .window import register_windows

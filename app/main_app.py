@@ -1,5 +1,5 @@
 import sys
-from .setup import register_windows
+from .setup import *
 from ui import MainWindow
 from plugins import PluginManager
 from PyQt5.QtWidgets import QApplication
@@ -12,7 +12,8 @@ class MainApp():
         self._setup()
 
     def _setup(self):
-        register_windows(self.main_window)
+        # register_windows(self.main_window)
+        pass
     
     def run(self):
         """Run the main application"""
