@@ -1,20 +1,21 @@
 import qtawesome as qta
-from PyQt5.QtWidgets import QApplication, QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtCore import Qt
-from .lef_macro_view import LefMacroView
-from .pin_assess_view import PinAssessView
+from .lef_macro_window import LefMacroWindow
+from .pin_assess_window import PinAssessWindow
 from core import library_manager
+from core.window import AbstractWindow, W_LIB_BROWSER_ID
 from ui.dialogs import MacroScoreDialog, PinScoreDialog, MacroInfoDialog, PinDestinyDialog
 
+from PyQt5.QtWidgets import QDockWidget, QListView, QVBoxLayout, QWidget, QMenu, QAction
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtCore import Qt
 
-class LibraryBrowser(QDockWidget):
-    def __init__(self, macro_view: LefMacroView, pin_assess_view: PinAssessView, parent=None):
+
+class LibBrowserWidget(QDockWidget):
+    def __init__(self, macro_win: LefMacroWindow, pin_assess_win: PinAssessWindow, parent=None):
         super().__init__("Macro Browser", parent=parent)
-        self.macro_view = macro_view
-        self.pin_assess_view = pin_assess_view
+        self.macro_win = macro_win
+        self.pin_assess_win = pin_assess_win
 
-        # Define action handlers as a class member
         self.action_handlers = {
             "Copy Name": self.copy_name,
             "Calc Macro Score": self.calc_macro_score,
@@ -57,8 +58,8 @@ class LibraryBrowser(QDockWidget):
         item = self.model.itemFromIndex(index)
         if item:
             macro_name = item.text()
-            self.macro_view.draw_cells([macro_name])
-            self.pin_assess_view.load(library_manager().calc_pin_density(macro_name), 
+            self.macro_win.draw_cells([macro_name])
+            self.pin_assess_win.load(library_manager().calc_pin_density(macro_name), 
                                       library_manager().calc_macro_score(macro_name),
                                       library_manager().calc_pin_score(macro_name))
 
@@ -129,4 +130,29 @@ class LibraryBrowser(QDockWidget):
 
     def update(self):
         self.setup_models(library_manager().get_all_macros())
-        self.pin_assess_view.clear()
+        self.pin_assess_win.clear()
+
+
+class LibBrowserWindow(AbstractWindow):
+    def __init__(self, macro_win: LefMacroWindow, pin_assess_win: PinAssessWindow, parent=None):
+        super().__init__(W_LIB_BROWSER_ID)
+        self._widget = LibBrowserWidget(macro_win, pin_assess_win, parent)
+        library_manager().add_observer(self._widget)
+    
+    def widget(self):
+        return self._widget
+    
+    def area(self):
+        return Qt.LeftDockWidgetArea
+    
+    def is_center(self):
+        return False
+        
+    def calc_macro_score(self, macro_name):
+        self._widget.calc_macro_score(macro_name)
+
+    def calc_pin_score(self, macro_name):
+        self._widget.calc_pin_score(macro_name)
+
+    def calc_pin_destiny(self, macro_name):
+        self._widget.calc_pin_destiny(macro_name)    

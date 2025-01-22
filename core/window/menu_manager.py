@@ -1,3 +1,4 @@
+from .menu_id import *
 
 class MenuManager:
     _instance = None

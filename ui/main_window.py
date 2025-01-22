@@ -6,6 +6,7 @@ from .icons import *
 from .widgets import *
 from .dialogs import *
 from core import *
+from core.window import window_manager, WindowManager
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -22,10 +23,6 @@ class MainWindow(QMainWindow):
         self.is_dark_theme = False
         
         self._init_manager()
-
-        self.macro_browser = None
-        self.macro_view = None
-        self.pin_assess_view = None
         
         self.schematic_view = None
         self.view_browser = None
@@ -34,13 +31,9 @@ class MainWindow(QMainWindow):
         self.create_menu_bar()
         self.create_tool_bar()
         self.create_status_bar()
-        self.create_central_widget()
         
     def _init_manager(self):
         create_menu_manager(self.menuBar())
-
-    def update_toolbar_status(self):
-        pass
 
     def create_menu_bar(self):
         file_menu = self.create_file_menu()
@@ -147,6 +140,7 @@ class MainWindow(QMainWindow):
         return self.create_action(name, icon, function, True, checked)
 
     def create_tool_bar(self):
+        self.debug()
         self.toolbar = ToolBar(action_manager().get_action(ACTION_TOOL_BAR), parent=self)
         self.addToolBar(self.toolbar)
 
@@ -162,19 +156,9 @@ class MainWindow(QMainWindow):
 
         status_bar.showMessage("Ready")
 
-    def create_central_widget(self):
-        """Create central widget for the main layout"""
-        self.macro_view = LefMacroView()
-        self.setCentralWidget(self.macro_view)
-        self.setContentsMargins(0, 0, 0, 0)
-        library_manager().add_observer(self.macro_view)
-
-        self.pin_assess_view = PinAssessView(self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.pin_assess_view)
-        
-        self.macro_browser = LibraryBrowser(self.macro_view, self.pin_assess_view)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.macro_browser)
-        library_manager().add_observer(self.macro_browser)
+    def show(self):
+        window_manager().show_all_windows(self)
+        super().show()
         
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
@@ -187,7 +171,7 @@ class MainWindow(QMainWindow):
 
         self.is_dark_theme = not self.is_dark_theme
         self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
-        self.macro_view.set_theme(self.is_dark_theme)
+        self.macro_win.set_theme(self.is_dark_theme)
 
     def new_project(self):
         dialog = NewProjectDialog(self)
@@ -218,10 +202,10 @@ class MainWindow(QMainWindow):
             widget.hide()
 
     def show_cells(self):
-        self.show_widgets(self.macro_browser)
+        self.show_widgets(self.lib_browser_win)
 
     def show_macro_view(self):
-        self.show_widgets(self.macro_view)
+        self.show_widgets(self.macro_win)
 
     def show_circuit(self):
         self.show_widgets(self.schematic_view)
@@ -288,3 +272,8 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         setting_manager().save_settings()
         event.accept()
+
+    def debug(self):
+        action = self.create_action('', 'fa.bell-o', lambda : window_manager().print(self))
+        action_manager().add_action(ACTION_TOOL_BAR, action)
+        

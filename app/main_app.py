@@ -1,16 +1,19 @@
-# app/main_app.py
-
 import sys
-from PyQt5.QtWidgets import QApplication
+from .setup import register_windows
 from ui import MainWindow
 from plugins import PluginManager
+from PyQt5.QtWidgets import QApplication
 
-class MainApp:
+class MainApp():
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.main_window = MainWindow()
         self.plugin_manager = PluginManager(self.main_window)
+        self._setup()
 
+    def _setup(self):
+        register_windows(self.main_window)
+    
     def run(self):
         """Run the main application"""
         self.plugin_manager.load_plugins()

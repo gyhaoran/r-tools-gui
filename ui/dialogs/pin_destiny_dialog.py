@@ -22,7 +22,7 @@ class PinDestinyDialog(QDialog):
         """Set up the UI components."""
         self.setWindowTitle("Pin Access")
         self.setWindowIcon(qta.icon(M_TOOLS_MACRO_COST_ICON))
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(300)
         self.setFont(QFont("Roboto", 10))
 
         main_layout = QVBoxLayout(self)

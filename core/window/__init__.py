@@ -1,9 +1,5 @@
+from .abstract_window import AbstractWindow
+from .window_manager import window_manager, WindowManager
 from .menu_manager import MenuManager, menu_manager, create_menu_manager
-
-M_FILE_ID = 'menu.file'
-M_VIEW_ID = 'menu.view'
-M_TOOLS_ID = 'menu.tools'
-
-M_PLACE_ID = 'menu.place'
-M_ROUTE_ID = 'menu.route'
-M_HELP_ID = 'menu.help'
+from .menu_id import *
+from .window_id import *

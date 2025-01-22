@@ -52,8 +52,8 @@ class PinScoreDialog(QDialog):
         tree.setSortingEnabled(True)  # Enable sorting
 
         header = tree.header()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         return tree
 
     def update_tree(self, data):
@@ -68,7 +68,6 @@ class PinScoreDialog(QDialog):
         """Create and configure a macro-level QTreeWidgetItem."""
         macro_item = QTreeWidgetItem(self.tree)
         macro_item.setText(0, macro_name)
-        macro_item.setFont(0, QFont("Roboto", 12, QFont.Bold))
         return macro_item
 
     def _add_pin_items(self, macro_item, pin_scores):

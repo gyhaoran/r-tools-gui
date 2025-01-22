@@ -1,15 +1,18 @@
 from backend.lef_parser import LefDscp, draw_macro
 from core import library_manager
+from core.window import AbstractWindow, W_LEF_MACRO_ID
+
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QVBoxLayout, QDockWidget, QWidget
+from PyQt5.QtCore import Qt
 
 
-class LefMacroView(QWidget):
-    def __init__(self, lef_dscp: LefDscp = None, parent=None):
+class LefMacroWidget(QDockWidget):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.lef_dscp = lef_dscp
+        self.lef_dscp: LefDscp = None
         self.text_color = '#000000'  # Default text color (black for light mode)
         self.init_ui()
         self.set_theme(False)  # Assuming light mode is the default
@@ -20,9 +23,11 @@ class LefMacroView(QWidget):
         self.figure = Figure(figsize=(12, 9))
         self.canvas = FigureCanvas(self.figure)
 
-        layout = QVBoxLayout()
+        self.widget = QWidget(self)
+        self.setWidget(self.widget)
+        
+        layout = QVBoxLayout(self.widget)
         layout.addWidget(self.canvas)
-        self.setLayout(layout)
 
     def set_theme(self, dark_mode=False):
         """Set the theme for the figure and canvas."""
@@ -77,3 +82,28 @@ class LefMacroView(QWidget):
         self.figure.clear()
         self.canvas.draw()
         self.update_lef(library_manager().lef_dscp)
+
+
+class LefMacroWindow(AbstractWindow):
+    def __init__(self, parent=None):
+        super().__init__(W_LEF_MACRO_ID)
+        self._widget = LefMacroWidget(parent)
+        library_manager().add_observer(self._widget)
+    
+    def widget(self):
+        return self._widget
+    
+    def area(self):
+        return Qt.LeftDockWidgetArea
+    
+    def is_center(self):
+        return True
+
+    def set_theme(self, dark_mode=False):
+        self._widget.set_theme(dark_mode)
+
+    def update_lef(self, lef_dscp: LefDscp):
+        self._widget.update_lef(lef_dscp)
+    
+    def draw_cells(self, cells):
+        self._widget.draw_cells(cells)

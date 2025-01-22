@@ -1,10 +1,13 @@
+from ui.dialogs import *
+from core.window import AbstractWindow, W_PIN_ASSESS_ID
+
 from PyQt5.QtWidgets import (
     QDockWidget, QWidget, QVBoxLayout
 )
 from PyQt5.QtCore import Qt
-from ui.dialogs import *
 
-class PinAssessView(QDockWidget):
+
+class PinAssessWidget(QDockWidget):
     def __init__(self, parent=None):
         super().__init__("Pin Assessment", parent)
         self._setup_ui()
@@ -74,6 +77,28 @@ class PinAssessView(QDockWidget):
     def load(self, pin_destiny_data, macro_score_data, pin_score_data):
         """Load all pin score"""
         self.clear()
-        self._load_pin_destiny(pin_destiny_data)
-        self._load_macro_score(macro_score_data)
         self._load_pin_score(pin_score_data)
+        self._load_macro_score(macro_score_data)
+        self._load_pin_destiny(pin_destiny_data)
+
+
+class PinAssessWindow(AbstractWindow):
+    def __init__(self, parent=None):
+        super().__init__(W_PIN_ASSESS_ID)
+        self._widget = PinAssessWidget(parent)
+    
+    def widget(self):
+        return self._widget
+    
+    def area(self):
+        return Qt.RightDockWidgetArea
+     
+    def is_center(self):
+        return False
+    
+    def load(self, pin_destiny_data, macro_score_data, pin_score_data):
+        self._widget.load(pin_destiny_data, macro_score_data, pin_score_data)
+    
+    def clear(self):
+        self._widget.clear()
+        
