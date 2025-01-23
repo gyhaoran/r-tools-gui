@@ -31,31 +31,21 @@ class SettingManager:
                 "asap7" : {"min_width": 0.018, "min_space": 0.018, "expand": True},
                 "smic7" : {"min_width": 0.010, "min_space": 0.010, "expand": False},
                 "smic14": {"min_width": 0.020, "min_space": 0.020, "expand": True},
-            }
-            
+            }            
             self.drc_rules = {
                 "asap7" : {"min_width": 0.018, "min_space": 0.018, "min_contact_size": 0.2},
                 "smic7" : {"min_width": 0.010, "min_space": 0.010, "min_contact_size": 0.3},
                 "smic14": {"min_width": 0.020, "min_space": 0.020, "min_contact_size": 0.4},
-            }
-            
-            # Load settings when the instance is created for the first time
-            self.load_settings() 
+            }            
+            self._load_settings() 
 
     @property
     def config_path(self):
         home_dir = get_user_home_dir()
         return os.path.join(home_dir, self._config_dir, self._config_file)
 
-    def load_settings(self):
-        """Load settings from a JSON file."""
-        config_path = self.config_path
-        config_dir = os.path.dirname(config_path)
-
-        # Ensure the directory exists
-        os.makedirs(config_dir, exist_ok=True)
-
-        # Try to load existing settings
+    def _load_last_settings(self, config_path):
+        """Load last settings from a JSON file."""
         if os.path.exists(config_path):
             with open(config_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -64,6 +54,13 @@ class SettingManager:
                 self.drc = data.get('drc', 'asap7')
                 self.pac_rules = data.get('pac_rules', self.pac_rules)
                 self.drc_rules = data.get('drc_rules', self.drc_rules)
+
+    def _load_settings(self):
+        """Load settings from a JSON file."""
+        config_path = self.config_path
+        config_dir = os.path.dirname(config_path)
+        os.makedirs(config_dir, exist_ok=True) # Ensure the directory exists        
+        self._load_last_settings(config_path)        
 
     def save_settings(self):
         """Save current settings to a JSON file."""

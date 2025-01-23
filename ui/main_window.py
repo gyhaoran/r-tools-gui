@@ -9,11 +9,13 @@ from core import *
 from plugins.pac_plugin.ui.dialogs import *
 
 from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 
 class MainWindow(QMainWindow):
+    theme_changed = pyqtSignal(bool)
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("iCell")
@@ -84,9 +86,6 @@ class MainWindow(QMainWindow):
 
     def create_view_menu(self):
         view_menu = QMenu('View', self)
-        lib_action = self.create_checked_action('Library', M_VIEW_LIBRARY_ICON, self.show_cells)
-        macro_action = self.create_checked_action('Macro View', M_VIEW_MACRO_VIEW_ICON, self.show_macro_view)
-
         self.circuit_action = self.create_checked_action('Circuit', M_VIEW_CIRCUIT_ICON, self.show_circuit)
         self.circuit_action.setDisabled(True)
         self.layout_action = self.create_checked_action('Layout', M_VIEW_LAYOUT_ICON, self.show_layout)
@@ -94,8 +93,9 @@ class MainWindow(QMainWindow):
         self.layers_action = self.create_checked_action('Layers', M_VIEW_LAYERS_ICON, self.show_layers)
         self.layers_action.setDisabled(True)
 
-        view_actions = [lib_action, macro_action, self.circuit_action, self.layout_action, self.layers_action]
+        view_actions = [self.circuit_action, self.layout_action, self.layers_action]
         view_menu.addActions(view_actions)
+        view_menu.addSeparator()
         toolbar_manager().add_actions(TOOLBAR_VIEW, view_actions)
         return view_menu
 
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
 
         self.is_dark_theme = not self.is_dark_theme
         self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
-        self.macro_win.set_theme(self.is_dark_theme)
+        self.theme_changed.emit(self.is_dark_theme)
 
     def new_project(self):
         dialog = NewProjectDialog(self)
@@ -190,12 +190,6 @@ class MainWindow(QMainWindow):
         else:
             widget.hide()
 
-    def show_cells(self):
-        self.show_widgets(self.lib_browser_win)
-
-    def show_macro_view(self):
-        self.show_widgets(self.macro_win)
-
     def show_circuit(self):
         self.show_widgets(self.schematic_view)
 
@@ -207,21 +201,6 @@ class MainWindow(QMainWindow):
 
     def toggle_toolbar(self):
         self.show_widgets(self.toolbar)
-
-    def assess_pin(self):
-        data = library_manager().calc_pin_score(None)
-        dialog = PinScoreDialog(data, self)
-        dialog.exec_()
-
-    def assess_macro(self):
-        data = library_manager().calc_macro_score(None)
-        dialog = MacroScoreDialog(data, self)
-        dialog.exec_()
-
-    def assess_pin_density(self):
-        data = library_manager().calc_pin_density(None)
-        dialog = PinDestinyDialog(data, self)
-        dialog.exec_()
 
     def show_settings(self, index=0):
         dialog = SettingsDialog(self, tab_index=index)

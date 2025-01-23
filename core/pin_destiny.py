@@ -14,6 +14,27 @@ def calculate_macro_pin_score(macro):
     return calculate_variance(pin_positions)
 
 
+def extract_positions_from_shape(shape):
+    if shape.type == "RECT":
+        return calculate_rect_center(shape)
+    elif shape.type == "POLYGON":
+        return calculate_polygon_center(shape)
+    return None
+
+
+def extract_positions_from_port(port):
+    """
+    Extract pin positions from a PORT object.
+    :param port: A PORT object.
+    :return: A list of pin positions.
+    """
+    positions = []
+    for layer in port.info["LAYER"]:
+        for shape in layer.shapes:
+            positions.append(extract_positions_from_shape(shape))
+    return positions
+
+
 def extract_pin_positions(macro):
     """
     Extract pin positions (x coordinates) from a Macro object.
@@ -30,22 +51,6 @@ def extract_pin_positions(macro):
         if port and "LAYER" in port.info:
             pin_positions.extend(extract_positions_from_port(port))
     return pin_positions
-
-
-def extract_positions_from_port(port):
-    """
-    Extract pin positions from a PORT object.
-    :param port: A PORT object.
-    :return: A list of pin positions.
-    """
-    positions = []
-    for layer in port.info["LAYER"]:
-        for shape in layer.shapes:
-            if shape.type == "RECT":
-                positions.append(calculate_rect_center(shape))
-            elif shape.type == "POLYGON":
-                positions.append(calculate_polygon_center(shape))
-    return positions
 
 
 def calculate_rect_center(rect):
@@ -77,6 +82,13 @@ def calculate_variance(pin_positions):
     mean = sum(pin_positions) / len(pin_positions)
     return sum((x - mean) ** 2 for x in pin_positions) / len(pin_positions)
 
+
+def _calc_macro_pin_density(macro_name, all_macros):
+    if macro_name not in all_macros:
+        raise ValueError(f"Macro '{macro_name}' not found in the provided macros.")
+    return {macro_name: calculate_macro_pin_score(all_macros[macro_name])}
+
+
 def calc_pin_density(all_macros, macro_name=None):
     """
     Calculate the pin density for one or all macros in the LEF file.
@@ -88,7 +100,5 @@ def calc_pin_density(all_macros, macro_name=None):
              If macro_name is specified, return a single score.
     """
     if macro_name:
-        if macro_name not in all_macros:
-            raise ValueError(f"Macro '{macro_name}' not found in the provided macros.")
-        return {macro_name: calculate_macro_pin_score(all_macros[macro_name])}
+        return _calc_macro_pin_density(macro_name, all_macros)
     return {name: calculate_macro_pin_score(macro) for name, macro in all_macros.items()}

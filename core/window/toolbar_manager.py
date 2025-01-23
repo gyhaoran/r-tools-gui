@@ -21,19 +21,19 @@ class ToolBarManager(Subject):
     def _change_value(self):
         self.notify()
 
-    def add_action(self, group_id: str, action):
+    def add_action(self, group_id, action):
         if group_id not in self.action_groups:
             self.action_groups[group_id] = []
         self.action_groups[group_id].append(action)
         self._change_value()
 
-    def add_actions(self, group_id: str, actions):
+    def add_actions(self, group_id, actions):
         if group_id not in self.action_groups:
             self.action_groups[group_id] = []
         self.action_groups[group_id].extend(actions)
         self._change_value()
 
-    def get_actions(self, group_id: str):
+    def get_actions(self, group_id):
         return self.action_groups.get(group_id, [])
 
     @staticmethod

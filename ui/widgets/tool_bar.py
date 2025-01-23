@@ -44,10 +44,14 @@ class ToolBarGroup():
     def add_separator(self):
         """Add a separator at the end of the group."""
         if self.separator:
-            return        
+            return
         self.separator = self.tool_bar.addSeparator()
         self._add_action(self.separator)
-        
+    
+    def clear(self):
+        """Clean toolbar group"""
+        self.actions = []  # List to track actions in the group
+        self.separator = None  # Reference to the separator (if any)
 
 class ToolBar(QToolBar):
 
@@ -67,11 +71,16 @@ class ToolBar(QToolBar):
         """Get the toolbar group with the specified name."""
         return self.groups.get(name)
     
+    def clear(self):
+        """Clean toolbar and groups"""
+        super().clear()
+        for _, group in self.groups.items():
+            group.clear()
+    
     def update(self):
         self.clear()
         for i, (key, group) in enumerate(self.groups.items()):
             actions = toolbar_manager().get_actions(key)
             group.add_actions(actions)
-            if i < len(self.groups) -1 :
+            if i < len(self.groups) - 1:
                 group.add_separator()
-    

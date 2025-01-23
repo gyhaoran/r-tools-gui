@@ -6,7 +6,7 @@ ID   | Funtions                  | Priority |   Status
 1    | Plugin Manager            | High     |    Done 
 2    | Menu Manager              | High     |    In Progress(50%)
 3    | Window Manager            | High     |    In Progress(90%)
-4    | ToolBar Manager           | High     |    In Progress(30%)
+4    | ToolBar Manager           | High     |    In Progress(90%)
 5    | Settings Manager          | Medium   |    Pending
 6    | Open Project Interface    | Medium   |    Pending
 
