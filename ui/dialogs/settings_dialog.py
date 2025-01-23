@@ -1,6 +1,8 @@
 from .settingpages import *
-from ui.icons import *
+from core.window.setting_page_id import SettingPageId
+
 from core import setting_manager, SettingManager
+from core.window import setting_page_manager, SettingPageManager
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -9,10 +11,13 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QMessageBox,
 )
+from PyQt5.QtCore import pyqtSignal
 import qtawesome as qta
 
 
 class SettingsDialog(QDialog):
+    save_setting_signal = pyqtSignal()
+    
     def __init__(self, parent=None, tab_index=0):
         super().__init__(parent)
         self.setWindowTitle("Settings")
@@ -22,25 +27,24 @@ class SettingsDialog(QDialog):
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
 
+        self._create_setting_page()
         self.setup_tabs(tab_index)
         self.setup_buttons()
+        
+    def _create_setting_page(self):
+        general_tab = GeneralSettingsPage(self)
+        pin_rule_tab = PinAssessRulePage(setting_manager()._all_settings, self)
+        drc_rule_tab = DrcRulePage(setting_manager()._all_settings, self)
+        
+        setting_manager().add_pages({SettingPageId.GENERAL_SETTING_ID: general_tab, 
+                                     SettingPageId.PAC_SETTING_ID: pin_rule_tab, 
+                                     SettingPageId.DRC_SETTING_ID: drc_rule_tab})
 
     def setup_tabs(self, tab_index):
         """Initialize and add tabs to the dialog."""
-        self.general_tab = GeneralSettingsPage(self)
-        self.add_tab(self.general_tab, "General Settings", M_TOOLS_SETTINGS_ICON)
-
-        pac_rules = setting_manager().pac_rules
-        drc_rules = setting_manager().drc_rules
-
-        self.pin_rule_tab = PinAssessRulePage(pac_rules, setting_manager().pac, parent=self)
-        self.add_tab(self.pin_rule_tab, "PAC Rule", M_TOOLS_PIN_RULE_ICON)
-        self.connect_rule_signals(self.pin_rule_tab, 1)
-
-        self.drc_rule_tab = DrcRulePage(drc_rules, setting_manager().drc, parent=self)
-        self.add_tab(self.drc_rule_tab, "DRC Rule", M_TOOLS_DRC_RULE_ICON)
-        self.connect_rule_signals(self.drc_rule_tab, 2)
-
+        for i, (_, page) in enumerate(setting_manager().get_pages().items()):
+            self.add_tab(page, page.title(), page.icon())
+            self.connect_rule_signals(page, i)
         self.tabs.setCurrentIndex(tab_index)
 
     def add_tab(self, widget, title, icon):
@@ -48,11 +52,13 @@ class SettingsDialog(QDialog):
         self.tabs.addTab(widget, title)
         self.tabs.setTabIcon(self.tabs.count() - 1, qta.icon(icon))
 
-    def connect_rule_signals(self, rule_tab, tab_index):
+    def connect_rule_signals(self, page, tab_index):
         """Connect signals for rule tabs."""
-        rule_tab.rule_added.connect(self.update_settings)
-        rule_tab.rule_deleted.connect(self.update_settings)
-        rule_tab.rule_changed.connect(lambda is_modified: self.update_tab_title(tab_index, is_modified))
+        if not all(hasattr(page, obj) for obj in ['rule_added', 'rule_deleted', 'rule_changed']):
+            return        
+        # page.rule_added.connect(self.update_settings)
+        # page.rule_deleted.connect(self.update_settings)
+        page.rule_changed.connect(lambda is_modified: self.update_tab_title(tab_index, is_modified))
 
     def setup_buttons(self):
         """Initialize and add buttons to the dialog."""
@@ -74,30 +80,21 @@ class SettingsDialog(QDialog):
         elif not is_modified and tab_text.endswith(" *"):
             self.tabs.setTabText(tab_index, tab_text.rstrip(" *"))
 
-    def update_settings(self, rule_name=None):
+    def update_settings(self):
         """Update settings in the setting manager."""
-        general_rule = self.general_tab.get_settings()
-        pac_rule = self.pin_rule_tab.get_settings()
-        drc_rule = self.drc_rule_tab.get_settings()
-        setting_manager().update_cur_settings(general_rule, pac_rule, drc_rule)
-
-        pac_rules = self.pin_rule_tab.export_pac_rules()
-        drc_rules = self.drc_rule_tab.export_drc_rules()
-        setting_manager().update_settings(pac_rules, drc_rules)
+        setting_manager().update_settings()
 
     def save_settings(self):
         """Save settings and update the UI."""
-        self.pin_rule_tab.save()
-        self.drc_rule_tab.save()
+        setting_manager().save()
         self.update_settings()
-
         for index in range(self.tabs.count()):
             self.update_tab_title(index, is_modified=False)
 
     @property
     def _is_modified(self):
         """Check if any tab has unsaved changes."""
-        return self.pin_rule_tab.is_modified or self.drc_rule_tab.is_modified
+        return setting_manager().has_modified()
 
     def on_cancel(self):
         """Handle the Cancel button click."""

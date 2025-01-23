@@ -5,7 +5,7 @@ from pathlib import Path
 def get_user_home_dir():
     return str(Path.home())
 
-class SettingManager:
+class SettingManager():
     _instance = None
     _config_dir = '.iCellGui'
     _config_file = 'settings.json'
@@ -21,23 +21,18 @@ class SettingManager:
         """Initialize the action manager"""
         if not hasattr(self, '_initialized'):
             self._initialized = True
-            self.actions = {}
-
-            self.general = {}
-            self.pac = 'asap7'
-            self.drc = 'asap7'
-            
-            self.pac_rules = {
-                "asap7" : {"min_width": 0.018, "min_space": 0.018, "expand": True},
-                "smic7" : {"min_width": 0.010, "min_space": 0.010, "expand": False},
-                "smic14": {"min_width": 0.020, "min_space": 0.020, "expand": True},
-            }            
-            self.drc_rules = {
-                "asap7" : {"min_width": 0.018, "min_space": 0.018, "min_contact_size": 0.2},
-                "smic7" : {"min_width": 0.010, "min_space": 0.010, "min_contact_size": 0.3},
-                "smic14": {"min_width": 0.020, "min_space": 0.020, "min_contact_size": 0.4},
-            }            
+            self._all_settings = {}
             self._load_settings() 
+            self._pages = {}
+
+    def add_page(self, page_id, page):
+        self._pages[page_id] = page
+
+    def add_pages(self, pages):
+        self._pages.update(pages)
+
+    def get_pages(self):
+        return self._pages
 
     @property
     def config_path(self):
@@ -48,12 +43,7 @@ class SettingManager:
         """Load last settings from a JSON file."""
         if os.path.exists(config_path):
             with open(config_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self.general = data.get('general', {})
-                self.pac = data.get('pac', 'asap7')
-                self.drc = data.get('drc', 'asap7')
-                self.pac_rules = data.get('pac_rules', self.pac_rules)
-                self.drc_rules = data.get('drc_rules', self.drc_rules)
+                self._all_settings = json.load(f)
 
     def _load_settings(self):
         """Load settings from a JSON file."""
@@ -62,36 +52,30 @@ class SettingManager:
         os.makedirs(config_dir, exist_ok=True) # Ensure the directory exists        
         self._load_last_settings(config_path)        
 
+    def save(self):
+        for _, page in self._pages.items():
+            page.save()
+
+    def update_settings(self):
+        for _, page in self._pages.items():
+            self._all_settings.update(page.get_setting())        
+
     def save_settings(self):
         """Save current settings to a JSON file."""
-        data = {
-            'general': self.general,
-            'pac': self.pac,
-            'drc': self.drc,
-            'pac_rules': self.pac_rules,
-            'drc_rules': self.drc_rules,
-        }
-
-        config_path = self.config_path
-        with open(config_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2)       
+        self.update_settings()
+        with open(self.config_path, 'w', encoding='utf-8') as f:
+            json.dump(self._all_settings, f, indent=2)       
+            
+    def has_modified(self)-> bool:
+        return any(page.has_modified() for _, page in self._pages.items())
     
     def get_pac_rule(self):
         """Get current pac setting"""
-        return self.pac_rules.get(self.pac, {})
+        return self._all_settings.get(self._all_settings['pac'], {})
     
     def get_drc_rule(self):
         """Get current drc setting"""
-        return self.drc_rules.get(self.drc, {})
-    
-    def update_cur_settings(self, general, pac, drc):
-        self.general = general
-        self.pac = pac
-        self.drc = drc
-    
-    def update_settings(self, pac_rules, drc_rules):
-        self.pac_rules = pac_rules
-        self.drc_rules = drc_rules
+        return self._all_settings.get(self._all_settings['drc'], {})
 
     @staticmethod
     def get_instance():

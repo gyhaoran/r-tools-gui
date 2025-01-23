@@ -9,6 +9,8 @@ ID   | Funtions                  | Priority |   Status
 4    | ToolBar Manager           | High     |    In Progress(90%)
 5    | Settings Manager          | Medium   |    Pending
 6    | Open Project Interface    | Medium   |    Pending
+7    | Center Widget Manager     | Lower    |    Pending
+
 
 
 ## Code Metrics

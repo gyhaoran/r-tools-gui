@@ -1,3 +1,4 @@
+from ui.icons import M_TOOLS_DRC_RULE_ICON
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
@@ -21,11 +22,17 @@ class DrcRulePage(QWidget):
     rule_deleted = pyqtSignal(str)
     rule_changed = pyqtSignal(bool)
     
-    def __init__(self, rule_parameters, last_select, parent=None):
+    DEAFALUET_RULES = {
+            "smic14": {"min_width": 0.020, "min_space": 0.020, "min_contact_size": 0.4},
+            "smic7" : {"min_width": 0.010, "min_space": 0.010, "min_contact_size": 0.3},
+            "asap7" : {"min_width": 0.018, "min_space": 0.018, "min_contact_size": 0.2},
+        }
+    
+    def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.is_modified = False
-        self.rule_parameters = rule_parameters
-        self.init_ui(last_select)
+        self.drc_rules = settings.get("drc_rules", self.DEAFALUET_RULES)
+        self.init_ui(settings.get('drc', 'smic14'))
 
     def init_ui(self, last_select):
         layout = QVBoxLayout(self)      
@@ -44,7 +51,7 @@ class DrcRulePage(QWidget):
     def setup_rule_selection(self, form_layout):
         rule_layout = QHBoxLayout()        
         self.rule_combo = QComboBox()
-        self.rule_combo.addItems(self.rule_parameters.keys())  
+        self.rule_combo.addItems(self.drc_rules.keys())  
         self.rule_combo.setEditable(False)
 
         list_view = QListView(self)
@@ -125,6 +132,9 @@ class DrcRulePage(QWidget):
         self.min_space_spinbox.textChanged.disconnect(self.mark_as_modified)
         self.min_contact_size_spinbox.valueChanged.disconnect(self.mark_as_modified)
         self.min_contact_size_spinbox.textChanged.disconnect(self.mark_as_modified)
+
+    def has_modified(self)-> bool:
+        return self.is_modified
                 
     def mark_as_modified(self):
         if not self.is_modified:
@@ -133,8 +143,8 @@ class DrcRulePage(QWidget):
                     
     def update_rule_parameters(self):
         rule_name = self.rule_combo.currentText()
-        if rule_name in self.rule_parameters:
-            params = self.rule_parameters[rule_name]
+        if rule_name in self.drc_rules:
+            params = self.drc_rules[rule_name]
             self.min_width_spinbox.setValue(params["min_width"])
             self.min_space_spinbox.setValue(params["min_space"])
             self.min_contact_size_spinbox.setValue(params["min_contact_size"])
@@ -142,8 +152,8 @@ class DrcRulePage(QWidget):
 
     def _save_parameters(self):
         rule_name = self.rule_combo.currentText()
-        if rule_name in self.rule_parameters:
-            params = self.rule_parameters[rule_name]
+        if rule_name in self.drc_rules:
+            params = self.drc_rules[rule_name]
             params["min_width"] = self.min_width_spinbox.value()
             params["min_space"] = self.min_space_spinbox.value()
             params["min_contact_size"] = self.min_contact_size_spinbox.value()
@@ -155,19 +165,19 @@ class DrcRulePage(QWidget):
     def add_rule(self):
         new_rule_name, ok = QInputDialog.getText(self, "Add Rule", "Enter new rule name:")
         if ok and new_rule_name:
-            if new_rule_name in self.rule_parameters:
+            if new_rule_name in self.drc_rules:
                 QMessageBox.warning(self, "Error", "Rule name already exists!")
             else:
                 self.disconnect_signals()                
                 self.rule_combo.addItem(new_rule_name)
                 self.rule_combo.setCurrentText(new_rule_name)
-                self.rule_parameters[new_rule_name] = {"min_width": 0.1, "min_space": 0.1, "min_contact_size": 0.2}
+                self.drc_rules[new_rule_name] = {"min_width": 0.1, "min_space": 0.1, "min_contact_size": 0.2}
                 self.rule_added.emit(new_rule_name)                
                 self.connect_signals()
 
     def delete_rule(self):
         rule_name = self.rule_combo.currentText()
-        if len(self.rule_parameters) <= 1:
+        if len(self.drc_rules) <= 1:
             QMessageBox.warning(self, "Error", "At least one rule must remain!")
             return
         confirm = QMessageBox.question(
@@ -176,14 +186,21 @@ class DrcRulePage(QWidget):
         if confirm == QMessageBox.Yes:
             self.disconnect_signals()            
             self.rule_combo.removeItem(self.rule_combo.currentIndex())
-            del self.rule_parameters[rule_name]
+            del self.drc_rules[rule_name]
             self.update_rule_parameters()
             self.rule_deleted.emit(rule_name)
             self.connect_signals()
 
-    def get_settings(self):
+    def get_cur_setting(self):
         return self.rule_combo.currentText()
-        
-    def export_drc_rules(self):
-        return self.rule_parameters
     
+    def get_setting(self):
+        settins = {"drc": self.get_cur_setting(), "drc_rules": self.drc_rules}
+        return settins
+
+    def title(self):
+        return "DRC Rule"
+    
+    def icon(self):
+        return M_TOOLS_DRC_RULE_ICON
+        

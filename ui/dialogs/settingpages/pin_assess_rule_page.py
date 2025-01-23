@@ -1,3 +1,4 @@
+from ui.icons import M_TOOLS_PIN_RULE_ICON
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
@@ -22,11 +23,18 @@ class PinAssessRulePage(QWidget):
     rule_deleted = pyqtSignal(str)
     rule_changed = pyqtSignal(bool)
     
-    def __init__(self, rule_parameters, last_select, parent=None):
+    DEAFALUET_RULES = {
+            "smic14": {"min_width": 0.020, "min_space": 0.020, "expand": True},
+            "smic7" : {"min_width": 0.010, "min_space": 0.010, "expand": False},
+            "asap7" : {"min_width": 0.018, "min_space": 0.018, "expand": True},
+        }
+    
+    def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.is_modified = False
-        self.rule_parameters = rule_parameters
-        self.init_ui(last_select)
+        self.pac_rules = settings.get("pac_rules", self.DEAFALUET_RULES)
+        self._cur_rule = settings.get("pac", "smic14")
+        self.init_ui(self._cur_rule)
 
     def init_ui(self, last_select):
         layout = QVBoxLayout(self)
@@ -39,13 +47,12 @@ class PinAssessRulePage(QWidget):
 
         self.rule_combo.setCurrentText(last_select)
         self.update_rule_parameters()
-
         self.connect_signals()
 
     def setup_rule_selection(self, form_layout):
         rule_layout = QHBoxLayout()
         self.rule_combo = QComboBox()
-        self.rule_combo.addItems(self.rule_parameters.keys())
+        self.rule_combo.addItems(self.pac_rules.keys())
         self.rule_combo.setEditable(False)
 
         list_view = QListView(self)
@@ -54,13 +61,10 @@ class PinAssessRulePage(QWidget):
         
         self.rule_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         rule_layout.addWidget(self.rule_combo)
-
         self.add_rule_button = self.create_button("fa.plus", self.add_rule)
         rule_layout.addWidget(self.add_rule_button)
-
         self.delete_rule_button = self.create_button("fa.trash-o", self.delete_rule)
         rule_layout.addWidget(self.delete_rule_button)
-
         form_layout.addRow("Rule:", rule_layout)
 
     def get_list_view_style(self):
@@ -125,6 +129,9 @@ class PinAssessRulePage(QWidget):
         self.min_space_spinbox.textChanged.disconnect(self.mark_as_modified)
         self.expand_checkbox.stateChanged.disconnect(self.mark_as_modified)        
 
+    def has_modified(self)-> bool:
+        return self.is_modified
+    
     def mark_as_modified(self):
         if not self.is_modified:
             self.is_modified = True
@@ -132,8 +139,8 @@ class PinAssessRulePage(QWidget):
 
     def update_rule_parameters(self):
         rule_name = self.rule_combo.currentText()
-        if rule_name in self.rule_parameters:
-            params = self.rule_parameters[rule_name]
+        if rule_name in self.pac_rules:
+            params = self.pac_rules[rule_name]
             self.min_width_spinbox.setValue(params["min_width"])
             self.min_space_spinbox.setValue(params["min_space"])
             self.expand_checkbox.setChecked(params["expand"])
@@ -141,8 +148,8 @@ class PinAssessRulePage(QWidget):
 
     def _save_parameters(self):
         rule_name = self.rule_combo.currentText()
-        if rule_name in self.rule_parameters:
-            params = self.rule_parameters[rule_name]
+        if rule_name in self.pac_rules:
+            params = self.pac_rules[rule_name]
             params["min_width"] = self.min_width_spinbox.value()
             params["min_space"] = self.min_space_spinbox.value()
             params["expand"] = self.expand_checkbox.isChecked()
@@ -154,19 +161,19 @@ class PinAssessRulePage(QWidget):
     def add_rule(self):
         new_rule_name, ok = QInputDialog.getText(self, "Add Rule", "Enter new rule name:")
         if ok and new_rule_name:
-            if new_rule_name in self.rule_parameters:
+            if new_rule_name in self.pac_rules:
                 QMessageBox.warning(self, "Error", "Rule name already exists!")
             else:
                 self.disconnect_signals()
                 self.rule_combo.addItem(new_rule_name)
                 self.rule_combo.setCurrentText(new_rule_name)
-                self.rule_parameters[new_rule_name] = {"min_width": 0.1, "min_space": 0.1, "expand": False}
+                self.pac_rules[new_rule_name] = {"min_width": 0.1, "min_space": 0.1, "expand": False}
                 self.rule_added.emit(new_rule_name)
                 self.connect_signals()
 
     def delete_rule(self):
         rule_name = self.rule_combo.currentText()
-        if len(self.rule_parameters) <= 1:
+        if len(self.pac_rules) <= 1:
             QMessageBox.warning(self, "Error", "At least one rule must remain!")
             return
         confirm = QMessageBox.question(
@@ -175,13 +182,21 @@ class PinAssessRulePage(QWidget):
         if confirm == QMessageBox.Yes:
             self.disconnect_signals()
             self.rule_combo.removeItem(self.rule_combo.currentIndex())
-            del self.rule_parameters[rule_name]
+            del self.pac_rules[rule_name]
             self.update_rule_parameters()
             self.rule_deleted.emit(rule_name)
             self.connect_signals()
 
-    def get_settings(self):
+    def get_cur_setting(self):
         return self.rule_combo.currentText()
     
-    def export_pac_rules(self):
-        return self.rule_parameters
+    def get_setting(self):
+        settins = {"pac": self.get_cur_setting(), "pac_rules": self.pac_rules}
+        return settins
+    
+    def title(self):
+        return "PAC Rule"
+    
+    def icon(self):
+        return M_TOOLS_PIN_RULE_ICON
+    

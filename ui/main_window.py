@@ -143,8 +143,6 @@ class MainWindow(QMainWindow):
         self.theme_toggle.clicked.connect(self.switch_theme)
         status_bar.addPermanentWidget(self.theme_toggle)
 
-        status_bar.showMessage("Ready")
-
     def show(self):
         window_manager().show_all_windows(self)
         super().show()
