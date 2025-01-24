@@ -22,12 +22,8 @@ class LibraryManager(Subject):
             super().__init__()
             
             self.lef_file = ''
-            self.pac_rule = {}
-            
+            self.pac_rule = {}            
             self.lef_dscp: LefDscp = None
-            self.def_dscp = None
-            self.gds = None
-            self.netlist = None
         
     def change_value(self):
         self.notify()
