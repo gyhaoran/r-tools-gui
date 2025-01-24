@@ -25,18 +25,16 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
         self.is_dark_theme = False
         
-        self._init_manager()
-        
-        self.schematic_view = None
-        self.view_browser = None
-        self.layers = None
+        self._init_manager() 
+        self._init_ui()
 
+    def _init_manager(self):
+        create_menu_manager(self.menuBar())
+            
+    def _init_ui(self):
         self.create_menu_bar()
         self.create_tool_bar()
         self.create_status_bar()
-        
-    def _init_manager(self):
-        create_menu_manager(self.menuBar())
 
     def create_menu_bar(self):
         file_menu = self.create_file_menu()
@@ -143,8 +141,12 @@ class MainWindow(QMainWindow):
         self.theme_toggle.clicked.connect(self.switch_theme)
         status_bar.addPermanentWidget(self.theme_toggle)
 
+    def create_settings(self):
+        self.general_page = GeneralSettingsPage(self)
+    
     def show(self):
         window_manager().show_all_windows(self)
+        self.create_settings()
         super().show()
         
     def _get_theme_tooltip(self, is_dark):

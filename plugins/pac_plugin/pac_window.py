@@ -28,17 +28,17 @@ class PacWindow():
 
     def assess_pin(self):
         data = library_manager().calc_pin_score(None)
-        dialog = PinScoreDialog(data, self)
+        dialog = PinScoreDialog(data, self.main_window)
         dialog.exec_()
 
     def assess_macro(self):
         data = library_manager().calc_macro_score(None)
-        dialog = MacroScoreDialog(data, self)
+        dialog = MacroScoreDialog(data, self.main_window)
         dialog.exec_()
 
     def assess_pin_density(self):
         data = library_manager().calc_pin_density(None)
-        dialog = PinDestinyDialog(data, self)
+        dialog = PinDestinyDialog(data, self.main_window)
         dialog.exec_()
 
     def _create_view_menu(self, main_window):
@@ -76,6 +76,8 @@ class PacWindow():
         self.macro_win = LefMacroWindow(main_window)
         self.pin_assess_win = PinAssessWindow(main_window)    
         self.lib_browser_win = LibBrowserWindow(self.macro_win, self.pin_assess_win, main_window)
+        self.pin_rule_tab = PinAssessRulePage(setting_manager()._all_settings, main_window)
+        self.drc_rule_tab = DrcRulePage(setting_manager()._all_settings, main_window)
 
     def _show_widgets(self, widget):
         if widget is None:

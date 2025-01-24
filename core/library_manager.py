@@ -1,7 +1,7 @@
 import os, json
 import pacpy
 from .observe import Subject
-from .setting_manager import setting_manager, SettingManager
+from .window import setting_manager, SettingManager
 from backend.lef_parser import LefDscp, parse_lef_file
 from .pin_destiny import calc_pin_density
 

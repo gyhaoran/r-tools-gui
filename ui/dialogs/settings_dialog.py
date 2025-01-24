@@ -1,8 +1,5 @@
 from .settingpages import *
-from core.window.setting_page_id import SettingPageId
-
 from core import setting_manager, SettingManager
-from core.window import setting_page_manager, SettingPageManager
 from PyQt5.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -22,29 +19,21 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.setMinimumSize(600, 400)
-
         self.main_layout = QVBoxLayout(self)
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
-
         self._create_setting_page()
         self.setup_tabs(tab_index)
         self.setup_buttons()
         
     def _create_setting_page(self):
-        general_tab = GeneralSettingsPage(self)
-        pin_rule_tab = PinAssessRulePage(setting_manager()._all_settings, self)
-        drc_rule_tab = DrcRulePage(setting_manager()._all_settings, self)
-        
-        setting_manager().add_pages({SettingPageId.GENERAL_SETTING_ID: general_tab, 
-                                     SettingPageId.PAC_SETTING_ID: pin_rule_tab, 
-                                     SettingPageId.DRC_SETTING_ID: drc_rule_tab})
+        self.general_tab = GeneralSettingsPage(self)
 
     def setup_tabs(self, tab_index):
         """Initialize and add tabs to the dialog."""
         for i, (_, page) in enumerate(setting_manager().get_pages().items()):
-            self.add_tab(page, page.title(), page.icon())
-            self.connect_rule_signals(page, i)
+            self.add_tab(page.widget(), page.title(), page.icon())
+            self.connect_rule_signals(page.widget(), i)
         self.tabs.setCurrentIndex(tab_index)
 
     def add_tab(self, widget, title, icon):
@@ -54,10 +43,8 @@ class SettingsDialog(QDialog):
 
     def connect_rule_signals(self, page, tab_index):
         """Connect signals for rule tabs."""
-        if not all(hasattr(page, obj) for obj in ['rule_added', 'rule_deleted', 'rule_changed']):
+        if not all(hasattr(page, obj) for obj in ['rule_changed']):
             return        
-        # page.rule_added.connect(self.update_settings)
-        # page.rule_deleted.connect(self.update_settings)
         page.rule_changed.connect(lambda is_modified: self.update_tab_title(tab_index, is_modified))
 
     def setup_buttons(self):
