@@ -35,6 +35,7 @@ class MainWindow(QMainWindow):
         self.create_menu_bar()
         self.create_tool_bar()
         self.create_status_bar()
+        self.create_settings()
 
     def create_menu_bar(self):
         file_menu = self.create_file_menu()
@@ -142,11 +143,10 @@ class MainWindow(QMainWindow):
         status_bar.addPermanentWidget(self.theme_toggle)
 
     def create_settings(self):
-        self.general_page = GeneralSettingsPage(self)
+        self.general_page = GeneralSettingsPage()
     
     def show(self):
         window_manager().show_all_windows(self)
-        self.create_settings()
         super().show()
         
     def _get_theme_tooltip(self, is_dark):

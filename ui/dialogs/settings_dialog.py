@@ -1,4 +1,3 @@
-from .settingpages import *
 from core import setting_manager, SettingManager
 from PyQt5.QtWidgets import (
     QDialog,
@@ -22,13 +21,9 @@ class SettingsDialog(QDialog):
         self.main_layout = QVBoxLayout(self)
         self.tabs = QTabWidget()
         self.main_layout.addWidget(self.tabs)
-        self._create_setting_page()
         self.setup_tabs(tab_index)
         self.setup_buttons()
         
-    def _create_setting_page(self):
-        self.general_tab = GeneralSettingsPage(self)
-
     def setup_tabs(self, tab_index):
         """Initialize and add tabs to the dialog."""
         for i, (_, page) in enumerate(setting_manager().get_pages().items()):

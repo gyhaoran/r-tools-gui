@@ -76,8 +76,8 @@ class PacWindow():
         self.macro_win = LefMacroWindow(main_window)
         self.pin_assess_win = PinAssessWindow(main_window)    
         self.lib_browser_win = LibBrowserWindow(self.macro_win, self.pin_assess_win, main_window)
-        self.pin_rule_tab = PinAssessRulePage(setting_manager()._all_settings, main_window)
-        self.drc_rule_tab = DrcRulePage(setting_manager()._all_settings, main_window)
+        self.pin_rule_tab = PinAssessRulePage(setting_manager()._all_settings)
+        self.drc_rule_tab = DrcRulePage(setting_manager()._all_settings)
 
     def _show_widgets(self, widget):
         if widget is None:
