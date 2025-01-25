@@ -4,27 +4,47 @@ from PyQt5.QtWidgets import (
     QWidget,
     QLineEdit,
     QCheckBox,
+    QComboBox,
     QFormLayout
 )
+from PyQt5.QtCore import pyqtSignal, QObject
 
 class GeneralSettingsWidget(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)     
+    change_theme = pyqtSignal(bool)
+    DEFAULT_SEETINGS = {"theme": "Light"}
+    
+    def __init__(self, settings, parent=None):
+        super().__init__(parent)
+        self._general = settings.get('general', self.DEFAULT_SEETINGS)
+        self._setup_ui()
+        self.theme_combo.setCurrentText(self._general.get('theme', 'Light'))
+    
+    def _setup_ui(self):
         layout = QFormLayout(self)
-        self.theme_combo = QLineEdit("Light")
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["Light", "Dark"])
+        self.theme_combo.setEditable(False)
+        self.theme_combo.currentTextChanged.connect(self._change_theme)
         layout.addRow("Theme:", self.theme_combo)
-        self.language_combo = QLineEdit("English")
-        layout.addRow("Language:", self.language_combo)
-        self.auto_save_checkbox = QCheckBox("Enable Auto Save")
-        layout.addRow(self.auto_save_checkbox)
+    
+    def _is_dark(self)-> bool:
+        return self.theme_combo.currentText() == "Dark"
+    
+    def _change_theme(self):
+        self.change_theme.emit(self._is_dark())
         
     def get_setting(self):
-        return {"general": {"theme": self.theme_combo.text()}}
+        return {"general": {"theme": self.theme_combo.currentText()}}
+            
+class GeneralSettingsPage(SettingPageRegistor, QObject):
+    theme_changed = pyqtSignal(bool)
     
-class GeneralSettingsPage(SettingPageRegistor):
-    def __init__(self, parent=None):
-        super().__init__(SettingPageId.GENERAL_SETTING_ID)
-        self._widget = GeneralSettingsWidget(parent)
+    def __init__(self, settings, parent=None):
+        SettingPageRegistor.__init__(self, SettingPageId.GENERAL_SETTING_ID)
+        QObject.__init__(self, parent)
+        self._widget = GeneralSettingsWidget(settings, parent)
+        self._widget.change_theme.connect(self.theme_changed.emit)
+
 
     def save(self):
         pass

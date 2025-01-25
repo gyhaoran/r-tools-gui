@@ -25,6 +25,10 @@ class SettingManager():
             self._load_settings() 
             self._pages = {}
 
+    @property
+    def all_settings(self):
+        return self._all_settings
+
     def add_page(self, page_id, page):
         self._pages[page_id] = page
 

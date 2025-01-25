@@ -1,6 +1,7 @@
 import os
 import qdarkstyle
 from qdarkstyle.light.palette import LightPalette
+from qdarkstyle.dark.palette import DarkPalette
 import qtawesome as qta
 from .icons import *
 from .widgets import *
@@ -22,11 +23,15 @@ class MainWindow(QMainWindow):
         icon_file = os.path.realpath(os.path.dirname(__file__) + f'/icons/image/{MAIN_WINDOW_ICON}')
         self.setWindowIcon(QIcon(icon_file))
         self.setGeometry(100, 100, 800, 600)
-        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
-        self.is_dark_theme = False
-        
+        self._init_theme()
         self._init_manager() 
         self._init_ui()
+
+    def _init_theme(self):
+        theme = setting_manager().all_settings.get("general", {"theme": "Light"}).get("theme", "Light")
+        self.is_dark_theme = (theme == 'Dark')
+        palette = DarkPalette() if self.is_dark_theme else LightPalette()
+        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette))        
 
     def _init_manager(self):
         create_menu_manager(self.menuBar())
@@ -136,31 +141,30 @@ class MainWindow(QMainWindow):
         status_bar = QStatusBar(self)
         self.setStatusBar(status_bar)
 
-        self.theme_toggle = QPushButton("", self)
-        self.theme_toggle.setIcon(qta.icon('fa.toggle-on'))
-        self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
-        self.theme_toggle.clicked.connect(self.switch_theme)
-        status_bar.addPermanentWidget(self.theme_toggle)
-
     def create_settings(self):
-        self.general_page = GeneralSettingsPage()
+        self.general_page = GeneralSettingsPage(setting_manager().all_settings)
+        self.general_page.theme_changed.connect(self._switch_theme_to)
     
     def show(self):
         window_manager().show_all_windows(self)
         super().show()
+        self._switch_theme_to(self.is_dark_theme)
         
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
+    
+    def _switch_theme_to_dark(self):
+        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
-    def switch_theme(self):
-        if self.is_dark_theme:
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
+    def _switch_theme_to_light(self):
+        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
+
+    def _switch_theme_to(self, is_dark):
+        if is_dark:
+            self._switch_theme_to_dark()            
         else:
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-
-        self.is_dark_theme = not self.is_dark_theme
-        self.theme_toggle.setToolTip(self._get_theme_tooltip(self.is_dark_theme))
-        self.theme_changed.emit(self.is_dark_theme)
+            self._switch_theme_to_light()
+        self.theme_changed.emit(is_dark)
 
     def new_project(self):
         dialog = NewProjectDialog(self)

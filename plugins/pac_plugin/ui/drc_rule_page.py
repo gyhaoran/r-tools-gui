@@ -19,8 +19,6 @@ import qtawesome as qta
 
 
 class DrcRuleWidget(QWidget):
-    rule_added = pyqtSignal(str)
-    rule_deleted = pyqtSignal(str)
     rule_changed = pyqtSignal(bool)
     
     DEAFALUET_RULES = {
@@ -45,9 +43,8 @@ class DrcRuleWidget(QWidget):
         self.setup_current_rule_label(layout)
 
         self.rule_combo.setCurrentText(last_select)
-        self.update_rule_parameters()
-
         self.connect_signals()
+        self.update_rule_parameters(last_select)
 
     def setup_rule_selection(self, form_layout):
         rule_layout = QHBoxLayout()        
@@ -61,10 +58,8 @@ class DrcRuleWidget(QWidget):
         
         self.rule_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         rule_layout.addWidget(self.rule_combo)
-
         self.add_rule_button = self.create_button("fa.plus", self.add_rule)
         rule_layout.addWidget(self.add_rule_button)
-
         self.delete_rule_button = self.create_button("fa.trash-o", self.delete_rule)
         rule_layout.addWidget(self.delete_rule_button)
 
@@ -119,6 +114,7 @@ class DrcRuleWidget(QWidget):
         layout.addWidget(self.current_rule_label)
 
     def connect_signals(self):
+        self.rule_combo.currentTextChanged.connect(self.update_rule_parameters)
         self.min_width_spinbox.valueChanged.connect(self.mark_as_modified)
         self.min_width_spinbox.textChanged.connect(self.mark_as_modified)
         self.min_space_spinbox.valueChanged.connect(self.mark_as_modified)
@@ -127,6 +123,7 @@ class DrcRuleWidget(QWidget):
         self.min_contact_size_spinbox.textChanged.connect(self.mark_as_modified)
 
     def disconnect_signals(self):
+        self.rule_combo.currentTextChanged.disconnect(self.update_rule_parameters)
         self.min_width_spinbox.valueChanged.disconnect(self.mark_as_modified)
         self.min_width_spinbox.textChanged.disconnect(self.mark_as_modified)
         self.min_space_spinbox.valueChanged.disconnect(self.mark_as_modified)
@@ -142,15 +139,16 @@ class DrcRuleWidget(QWidget):
             self.is_modified = True
             self.rule_changed.emit(True)
                     
-    def update_rule_parameters(self):
-        rule_name = self.rule_combo.currentText()
+    def update_rule_parameters(self, rule_name):
+        self.disconnect_signals()
         if rule_name in self.drc_rules:
             params = self.drc_rules[rule_name]
             self.min_width_spinbox.setValue(params["min_width"])
             self.min_space_spinbox.setValue(params["min_space"])
             self.min_contact_size_spinbox.setValue(params["min_contact_size"])
         self.current_rule_label.setText(f"Current Rule:  {rule_name}")
-
+        self.connect_signals()
+        
     def _save_parameters(self):
         rule_name = self.rule_combo.currentText()
         if rule_name in self.drc_rules:
@@ -168,13 +166,11 @@ class DrcRuleWidget(QWidget):
         if ok and new_rule_name:
             if new_rule_name in self.drc_rules:
                 QMessageBox.warning(self, "Error", "Rule name already exists!")
-            else:
-                self.disconnect_signals()                
+            else:             
                 self.rule_combo.addItem(new_rule_name)
                 self.rule_combo.setCurrentText(new_rule_name)
                 self.drc_rules[new_rule_name] = {"min_width": 0.1, "min_space": 0.1, "min_contact_size": 0.2}
-                self.rule_added.emit(new_rule_name)                
-                self.connect_signals()
+                self.update_rule_parameters(new_rule_name)
 
     def delete_rule(self):
         rule_name = self.rule_combo.currentText()
@@ -184,13 +180,10 @@ class DrcRuleWidget(QWidget):
         confirm = QMessageBox.question(
             self, "Delete Rule", f"Are you sure you want to delete rule '{rule_name}'?", QMessageBox.Yes | QMessageBox.No
         )
-        if confirm == QMessageBox.Yes:
-            self.disconnect_signals()            
+        if confirm == QMessageBox.Yes:          
             self.rule_combo.removeItem(self.rule_combo.currentIndex())
             del self.drc_rules[rule_name]
-            self.update_rule_parameters()
-            self.rule_deleted.emit(rule_name)
-            self.connect_signals()
+            self.update_rule_parameters(self.rule_combo.currentText())
 
     def get_cur_setting(self):
         return self.rule_combo.currentText()
