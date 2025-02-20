@@ -146,10 +146,11 @@ class MainWindow(QMainWindow):
         self.general_page.theme_changed.connect(self._switch_theme_to)
     
     def show(self):
+        self.chat_window = CopilotWindow(self)
         window_manager().show_all_windows(self)
         super().show()
         self._switch_theme_to(self.is_dark_theme)
-        
+
     def _get_theme_tooltip(self, is_dark):
         return "Light Mode" if is_dark else "Dark Mode"
     

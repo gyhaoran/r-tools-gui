@@ -2,10 +2,13 @@ import sys
 from ui import MainWindow
 from plugins import PluginManager
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTextCodec
 
 class MainApp():
     def __init__(self):
         self.app = QApplication(sys.argv)
+        QTextCodec.setCodecForLocale(QTextCodec.codecForName('UTF-8'))
+        self.app.setApplicationName('iCell')            
         self.main_window = MainWindow()
         self.plugin_manager = PluginManager(self.main_window)
     
