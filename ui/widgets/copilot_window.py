@@ -46,11 +46,11 @@ class EnhancedTextEdit(QTextEdit):
 
 class ChatMessageWidget(QTextEdit):
     """Chat message bubble widget with streaming display support"""
-    def __init__(self, text, is_user=True, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self, text, is_user=True, copilot_widget=None):
+        super().__init__(parent=copilot_widget)
         self.is_user = is_user
         self.full_content = text
-        self.copilot_widget: CopilotWidget = parent
+        self.copilot_widget: CopilotWidget = copilot_widget
         self.displayed_content = ""
         self.setReadOnly(True)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
@@ -68,10 +68,10 @@ class ChatMessageWidget(QTextEdit):
         self.stream_timer = QTimer(self)
         self.stream_timer.timeout.connect(self._stream_display)
         self.display_position = 0        
-        self.stream_speed = 15
+        self.stream_speed = 20
         self.chunk_size = 10
         self._start_streaming()
-        
+
     def _init_style(self):
         self.setStyleSheet(f"""
             background: {'#E8F5E9' if self.is_user else '#F5F5F5'};
@@ -81,24 +81,23 @@ class ChatMessageWidget(QTextEdit):
             white-space: pre-wrap;
         """)
         
+    def _insert_content(self, new_content):
+        cursor = self.textCursor()            
+        cursor.movePosition(cursor.End)
+        cursor.insertText(new_content)            
+    
     def _stream_display(self):
         try:
             if self.display_position >= len(self.full_content):
                 self.stream_timer.stop()
+                self.adjust_size()
                 return
 
             end_pos = min(self.display_position + self.chunk_size, len(self.full_content))            
             new_content = self.full_content[self.display_position:end_pos]
             self.display_position = end_pos
-
-            cursor = self.textCursor()
-            
-            cursor.movePosition(cursor.End)
-            cursor.insertText(new_content)            
-
-            if end_pos % 10 == 0 or end_pos == len(self.full_content):
-                self.adjust_size()
-
+            self._insert_content(new_content)
+            self.adjust_size()
         except Exception as e:
             self.stream_timer.stop()
 
@@ -120,7 +119,7 @@ class ChatMessageWidget(QTextEdit):
     def adjust_size(self):
         """Dynamic adjustment of widget size"""
         doc = self.document().clone()
-        max_width = int(self.parentWidget().width() * 0.75)
+        max_width = int(self.copilot_widget.width() * 0.75)
         doc.setTextWidth(max_width)
         doc_width = int(min(doc.idealWidth() + 40, max_width))
         doc_height = int(doc.size().height() + 30)
@@ -131,14 +130,19 @@ class ChatMessageWidget(QTextEdit):
     def sizeHint(self):
         return QSize(self.width(), self.height())
 
-
+    def stop(self):
+        """Stop streaming display"""
+        self.stream_timer.stop()
+        self._insert_content('\n\n已停止处理\n')
+        self.adjust_size()
+    
 class CopilotWidget(QDockWidget):
     """AI Assistant interaction interface with enhanced streaming support"""
     sendRequest = pyqtSignal(dict, bool)  # (message content, deep mode)
-    stopProcessing = pyqtSignal()
+    stopProcessing = pyqtSignal(str, bool)  # (request_id, deep_mode)
 
     def __init__(self, parent=None):
-        super().__init__("AI助手", parent)
+        super().__init__("AI Copilot", parent)
         self.current_request_id = None
         self.is_processing = False
         self.current_ai_message = None  # Track current AI message widget
@@ -298,10 +302,10 @@ class CopilotWidget(QDockWidget):
 
         if is_end:
             self.set_processing_state(False)
+            self.current_ai_message.adjust_size()
             self.current_request_id = None
             self.current_ai_message = None
-
-
+    
     def _append_to_existing_message(self, content):
         """Append content to existing AI message"""
         if self.current_ai_message:
@@ -329,13 +333,14 @@ class CopilotWidget(QDockWidget):
     def handle_stop(self):
         """Handle stop request"""
         if self.current_request_id:
-            self.stopProcessing.emit()
+            self.stopProcessing.emit(self.current_request_id, self.deep_toggle.isChecked())
+            if self.current_ai_message:
+                self.current_ai_message.stop()
             self.set_processing_state(False)
             self.current_request_id = None
 
     def set_processing_state(self, active):
         """Update processing state"""
-        print(f"active {active}")
         self.is_processing = active
         self.send_btn.setVisible(not active)
         self.stop_btn.setVisible(active)
@@ -348,7 +353,7 @@ class CopilotWidget(QDockWidget):
             self.scroll_area.verticalScrollBar().maximum()
         )
 
-    def show_temporary_status(self, text, bg_color):
+    def show_temporary_status(self, text, bg_color="#FFF3E0"):
         """Show temporary status message"""
         status = QLabel(text)
         status.setStyleSheet(f"""
@@ -359,7 +364,7 @@ class CopilotWidget(QDockWidget):
             margin: 8px;
         """)
         self.chat_layout.insertWidget(0, status)
-        QTimer.singleShot(2000, status.deleteLater)
+        QTimer.singleShot(3000, status.deleteLater)
 
     def update_status(self, status):
         """Update connection status"""
@@ -369,7 +374,7 @@ class CopilotWindow(AbstractWindow):
     def __init__(self, parent=None):
         super().__init__(W_COPILOT_CHAT_ID)
         self._widget  = CopilotWidget(parent)
-        self.llm_client  = LLMClient("ws://localhost:8000/chat")
+        self.llm_client  = LLMClient("ws://localhost:8765/ws/llm")
         self.llm_client.connect_server() 
         self.setup_connections()
 
@@ -378,21 +383,22 @@ class CopilotWindow(AbstractWindow):
         self._widget.stopProcessing.connect(self.handle_stop) 
         
         self.llm_client.response_received.connect(self.handle_response)
-        self.llm_client.status_changed.connect(self._widget.update_status) 
+        self.llm_client.connection_changed.connect(self._widget.update_status)
+        self.llm_client.send_error.connect(self._widget.show_temporary_status)
  
     def handle_request(self, data, deep_mode):
         self.llm_client.send_request(data,  deep_mode)
- 
+        
     def handle_response(self, data):
         self._widget.handle_response( 
             success=True,
-            response=data["content"],
-            request_id=data["request_id"],
-            is_end=data["is_end"]
+            response=data.get("content",  ""),
+            request_id=data.get("request_id", ""),
+            is_end=data.get("is_end",  True)
         )
  
-    def handle_stop(self):
-        self._widget.handle_response(False, "操作已中止", self._widget.current_request_id, True)
+    def handle_stop(self, request_id, deep_mode):
+        self.llm_client.stop_request(request_id)
  
     def widget(self):
         return self._widget 

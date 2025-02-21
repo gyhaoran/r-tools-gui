@@ -42,7 +42,6 @@ class LibBrowserWidget(QDockWidget):
 
         layout.addWidget(self.list_view)
         self.setMinimumWidth(200)
-        self.setMaximumWidth(350)
 
     def setup_models(self, cell_names):
         """Setup the model with the given cell names."""
