@@ -1,6 +1,6 @@
 import os
 import qdarkstyle
-from qdarkstyle.light.palette import LightPalette
+from .themes import CmosLightPalette as LightPalette
 from qdarkstyle.dark.palette import DarkPalette
 import qtawesome as qta
 from .icons import *
@@ -9,7 +9,7 @@ from .dialogs import *
 from core import *
 from plugins.pac_plugin.ui.dialogs import *
 
-from PyQt5.QtWidgets import (QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
@@ -17,8 +17,9 @@ from PyQt5.QtGui import QIcon
 class MainWindow(QMainWindow):
     theme_changed = pyqtSignal(bool)
     
-    def __init__(self):
+    def __init__(self, app: QApplication):
         super().__init__()
+        self.app = app
         self.setWindowTitle("iCell")
         icon_file = os.path.realpath(os.path.dirname(__file__) + f'/icons/image/{MAIN_WINDOW_ICON}')
         self.setWindowIcon(QIcon(icon_file))
@@ -31,7 +32,7 @@ class MainWindow(QMainWindow):
         theme = setting_manager().all_settings.get("general", {"theme": "Light"}).get("theme", "Light")
         self.is_dark_theme = (theme == 'Dark')
         palette = DarkPalette() if self.is_dark_theme else LightPalette()
-        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette))        
+        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette))
 
     def _init_manager(self):
         create_menu_manager(self.menuBar())

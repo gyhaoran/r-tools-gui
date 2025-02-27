@@ -525,7 +525,7 @@ class LayoutWindow(QWidget):
             wspace=0,     # 水平子图间距
             hspace=0      # 垂直子图间距
         )
-        ax.set_title(title, color=self.text_color)
+        # ax.set_title(title, color=self.text_color)
         ax.set_axis_off()
         ax.set_aspect('equal')
         self.ax = ax

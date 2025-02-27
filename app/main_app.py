@@ -9,7 +9,7 @@ class MainApp():
         self.app = QApplication(sys.argv)
         QTextCodec.setCodecForLocale(QTextCodec.codecForName('UTF-8'))
         self.app.setApplicationName('iCell')            
-        self.main_window = MainWindow()
+        self.main_window = MainWindow(self.app)
         self.plugin_manager = PluginManager(self.main_window)
     
     def run(self):
