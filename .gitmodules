@@ -2,3 +2,8 @@
 	path = backend/r-tools
 	url = git@github.com:gyhaoran/r-tools.git
 	branch = main
+
+[submodule "backend/lclayout"]
+	path = backend/lclayout
+	url = git@github.com:gyhaoran/lclayout.git
+	branch = main

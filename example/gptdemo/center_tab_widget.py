@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QTabWidget, 
                             QVBoxLayout, QLabel, QPushButton, QHBoxLayout)
 
+
 class StylishTabWidget(QTabWidget):
     """Customized QTabWidget with enhanced visual design
     

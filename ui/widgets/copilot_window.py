@@ -1,6 +1,7 @@
 import json
 import asyncio
-from core import library_manager, LLMClient
+from core import library_manager
+from core.llm_client import LLMClient
 from core.window import AbstractWindow, W_COPILOT_CHAT_ID
 from PyQt5.QtWidgets import (QDockWidget, QWidget, QVBoxLayout, QTextEdit, QMenu, QApplication,
                              QHBoxLayout, QPushButton, QScrollArea, QLabel, QSizePolicy)
@@ -8,7 +9,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QSize, QObject, QTimer, QEvent
 from PyQt5.QtGui import QColor, QFont
 import qtawesome as qta
 import uuid
-
+from qasync import asyncSlot
 
 class EnhancedTextEdit(QTextEdit):
     """Enhanced text input box with improved IME support"""
@@ -293,10 +294,7 @@ class CopilotWidget(QDockWidget):
             return
 
         if success:
-            if self.current_ai_message:
-                self._append_to_existing_message(response)
-            else:
-                self._add_ai_message(response)
+            self.handle_success(response)
         else:
             self.handle_error(response)
 
@@ -305,13 +303,18 @@ class CopilotWidget(QDockWidget):
             self.current_ai_message.adjust_size()
             self.current_request_id = None
             self.current_ai_message = None
+
+    def handle_success(self, response):
+        if self.current_ai_message:
+            self._append_to_existing_message(response)
+        else:
+            self._add_ai_message(response)
     
     def _append_to_existing_message(self, content):
         """Append content to existing AI message"""
-        if self.current_ai_message:
-            self.current_ai_message.append_content(content)
-            self.current_ai_message.adjust_size()
-            self.scroll_to_bottom()
+        self.current_ai_message.append_content(content)
+        self.current_ai_message.adjust_size()
+        self.scroll_to_bottom()
 
     def _add_message_widget(self, message_widget):
         """Add message widget to chat layout"""
@@ -374,31 +377,56 @@ class CopilotWindow(AbstractWindow):
     def __init__(self, parent=None):
         super().__init__(W_COPILOT_CHAT_ID)
         self._widget  = CopilotWidget(parent)
-        self.llm_client  = LLMClient("ws://localhost:8765/ws/llm")
+        self.llm_client  = LLMClient("ws://localhost:8765")
         self.llm_client.connect_server() 
         self.setup_connections()
 
     def setup_connections(self):
+            # 添加调试输出
+        print("Signal signature:", self._widget.sendRequest.signal)
         self._widget.sendRequest.connect(self.handle_request)
         self._widget.stopProcessing.connect(self.handle_stop) 
         
         self.llm_client.response_received.connect(self.handle_response)
         self.llm_client.connection_changed.connect(self._widget.update_status)
         self.llm_client.send_error.connect(self._widget.show_temporary_status)
- 
-    def handle_request(self, data, deep_mode):
-        self.llm_client.send_request(data,  deep_mode)
-        
+
+    @asyncSlot(dict, bool)
+    async def handle_request(self, data: dict, deep_mode: bool):
+        """统一的异步请求处理"""
+        try:
+            # 添加数据校验
+            if not isinstance(data, dict) or "content" not in data:
+                raise ValueError("Invalid request format")
+                
+            # 调用LLM客户端
+            request_id = await self.llm_client.send_request({
+                "request_id": data.get("request_id", str(uuid.uuid4())),
+                "content": data["content"]
+            }, deep_mode)
+            
+            # 更新界面状态
+            self._widget.current_request_id = request_id
+            
+        except Exception as e:
+            self._widget.show_temporary_status(f"Error: {str(e)}")
+
     def handle_response(self, data):
-        self._widget.handle_response( 
+        """响应处理保持兼容"""
+        # 原数据格式保持不变
+        self._widget.handle_response(
             success=True,
-            response=data.get("content",  ""),
+            response=data.get("content", ""),
             request_id=data.get("request_id", ""),
-            is_end=data.get("is_end",  True)
+            is_end=data.get("is_end", True)
         )
- 
-    def handle_stop(self, request_id, deep_mode):
-        self.llm_client.stop_request(request_id)
+
+    @asyncSlot(str, bool)
+    async def handle_stop(self, request_id, deep_mode):
+        """异步终止请求"""
+        await self.llm_client.stop_request(request_id)
+        if request_id in self._widget.active_requests:
+            self._widget.active_requests.remove(request_id)
  
     def widget(self):
         return self._widget 

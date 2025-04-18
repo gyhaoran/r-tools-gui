@@ -93,18 +93,46 @@ class SettingsDialog(QDialog):
     def closeEvent(self, event):
         """Override closeEvent to handle unsaved changes."""
         if self._is_modified:
-            confirm = QMessageBox.question(
-                self, "Unsaved Changes",
-                "You have unsaved changes. Are you sure you want to close?",
-                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
-            )
-            if confirm == QMessageBox.Save:
-                self.save_settings()  # Save changes and close
+            msg_box = QMessageBox(self, icon=QMessageBox.Question, title="Unsaved Changes")
+            # msg_box.setWindowTitle()
+            # msg_box.setIcon(qta.icon('msc.question'))
+            msg_box.setText("<b>You have unsaved changes! Are you sure want to close?</b>")
+            
+            # # 设置无默认图标
+            # msg_box.setIcon()
+            
+            # 创建带图标的按钮
+            self.save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
+            self.save_btn.setIcon(qta.icon('msc.save'))
+            
+            self.discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
+            self.discard_btn.setIcon(qta.icon('msc.trash'))
+            
+            self.cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
+            self.cancel_btn.setIcon(qta.icon('msc.close'))
+            
+            # 设置按钮样式
+            msg_box.setStyleSheet("""
+                QPushButton {
+                    min-width: 80px;
+                    padding: 5px;
+                }
+                QMessageBox {
+                    background-color: #F5F5F5;                
+                }
+            """)
+            
+            msg_box.exec_()
+            
+            # 处理用户选择
+            result = msg_box.clickedButton()
+            if result == self.save_btn:
+                self.save_changes()
                 event.accept()
-            elif confirm == QMessageBox.Discard:
-                event.accept()  # Discard changes and close
+            elif result == self.discard_btn:
+                event.accept()
             else:
-                event.ignore()  # Cancel the close operation
+                event.ignore()
         else:
             event.accept()  # No unsaved changes, close the dialog
             

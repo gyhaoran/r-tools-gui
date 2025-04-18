@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.colors import to_rgba
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QDialog, QVBoxLayout, QAction,
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QDialog, QVBoxLayout, QAction,QHBoxLayout, QLabel,
                              QDockWidget, QWidget, QListWidget, QListWidgetItem,QToolBar,
                              QStyle, QColorDialog, QStyledItemDelegate, QStyleOptionButton)
 from PyQt5.QtGui import QColor, QPainter
@@ -250,9 +250,31 @@ class LayersWidget(QWidget):
         super().__init__(parent)
         self.list_widget = QListWidget()
         self.list_widget.setItemDelegate(LayerDelegate(self))
+        
+        # 表头布局
+        header_widget = QWidget()
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(5, 2, 5, 2)
+        color_header = QLabel("Color")
+        name_header = QLabel("Layer Name")
+        fill_header = QLabel("Fill")
+        header_layout.addWidget(color_header, 1)
+        header_layout.addWidget(name_header, 3)
+        header_layout.addWidget(fill_header, 1)
+        header_widget.setLayout(header_layout)
+        
+        
+        # 主布局
         layout = QVBoxLayout()
+        layout.addWidget(header_widget)
         layout.addWidget(self.list_widget)
         self.setLayout(layout)
+        
+        # 连接信号
+        self.select_all_visible.triggered.connect(lambda: self.toggle_all(True, 'visible'))
+        self.deselect_all_visible.triggered.connect(lambda: self.toggle_all(False, 'visible'))
+        self.select_all_fill.triggered.connect(lambda: self.toggle_all(True, 'fill'))
+        self.deselect_all_fill.triggered.connect(lambda: self.toggle_all(False, 'fill'))
 
         for layer in color_defs:
             color, fill = color_defs[layer]

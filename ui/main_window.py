@@ -1,7 +1,9 @@
 import os
 import qdarkstyle
 from .themes import CmosLightPalette as LightPalette
+from .themes import load_stylesheet
 from qdarkstyle.dark.palette import DarkPalette
+from qdarkstyle.light.palette import LightPalette
 import qtawesome as qta
 from .icons import *
 from .widgets import *
@@ -9,7 +11,7 @@ from .dialogs import *
 from core import *
 from plugins.pac_plugin.ui.dialogs import *
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenuBar, QMenu, QAction, QVBoxLayout, QWidget, QToolBar, QStatusBar, QDockWidget, QPushButton, QMessageBox, QLabel)
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 
@@ -33,7 +35,7 @@ class MainWindow(QMainWindow):
         self.is_dark_theme = (theme == 'Dark')
         palette = DarkPalette() if self.is_dark_theme else LightPalette()
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=palette))
-
+        
     def _init_manager(self):
         create_menu_manager(self.menuBar())
             
@@ -147,7 +149,7 @@ class MainWindow(QMainWindow):
         self.general_page.theme_changed.connect(self._switch_theme_to)
     
     def show(self):
-        self.chat_window = CopilotWindow(self)
+        # self.chat_window = CopilotWindow(self)
         window_manager().show_all_windows(self)
         super().show()
         self._switch_theme_to(self.is_dark_theme)
@@ -156,10 +158,12 @@ class MainWindow(QMainWindow):
         return "Light Mode" if is_dark else "Dark Mode"
     
     def _switch_theme_to_dark(self):
-        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=DarkPalette()))
+        # self.setStyleSheet(load_stylesheet())
 
     def _switch_theme_to_light(self):
         self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5', palette=LightPalette()))
+        # self.setStyleSheet(load_stylesheet())
 
     def _switch_theme_to(self, is_dark):
         if is_dark:

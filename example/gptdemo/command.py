@@ -27,6 +27,111 @@ class Command(ABC):
         """Execute command with given arguments"""
         pass
 
+# ==================== Sample Command Implementations ====================
+class EchoCommand(Command):
+    """Demonstration command for echo functionality"""
+    @classmethod
+    def name(cls) -> str:
+        return "echo"
+    
+    @classmethod
+    def dscp(cls) -> str:
+        return (
+            "Display input arguments\n"
+            "Usage:\n"
+            "  echo [text...]\n"
+            "Options:\n"
+            "  text  One or more arguments to display"
+        )
+    
+    def execute(self, args: List[str]) -> str:
+        return " ".join(args) if args else ""
+
+
+class HistoryCommand(Command):
+    """Show history information"""
+    @classmethod
+    def name(cls) -> str:
+        return "history"
+    
+    @classmethod
+    def dscp(cls) -> str:
+        return "Show history information"
+    
+    def execute(self, args: List[str]) -> str:
+        return "Show history information"
+
+
+class VersionCommand(Command):
+    """System version information"""
+    @classmethod
+    def name(cls) -> str:
+        return "version"
+    
+    @classmethod
+    def dscp(cls) -> str:
+        return "Display terminal version information"
+    
+    def execute(self, args: List[str]) -> str:
+        return "iCell Terminal v2.1.1 (2025)"
+    
+# ==================== Command Sequence Implementation ====================
+import shlex
+class SequenceCommand(Command):
+    """Execute multiple commands in sequence with proper argument parsing"""
+    @classmethod
+    def name(cls) -> str:
+        return "sequence"
+    
+    @classmethod
+    def dscp(cls) -> str:
+        return (
+            "Execute commands sequentially, stop on first failure\n"
+            "Usage:\n"
+            "  sequence \"cmd1 args\" \"cmd2 args\"...\n"
+            "Example:\n"
+            "  sequence \"echo hello\" \"version\""
+        )
+    
+    def execute(self, args: List[str]) -> str:
+        registry = CommandRegistry()
+        results = []
+        
+        try:
+            # Split command sequence with proper quote handling
+            commands = self._parse_arguments(args)
+        except ValueError as e:
+            return f"Invalid command sequence: {str(e)}"
+        
+        for cmd_str in commands:
+            try:
+                # Split into command and arguments
+                parts = shlex.split(cmd_str)
+                if not parts:
+                    continue
+                
+                cmd_name = parts[0]
+                cmd_args = parts[1:]
+                
+                cmd = registry.get_command(cmd_name)
+                output = cmd.execute(cmd_args)
+                results.append(output.strip())
+            except Exception as e:
+                results.append(f"Error in '{cmd_str}': {str(e)}")
+                break
+        
+        return '\n'.join(filter(None, results))
+    
+    def _parse_arguments(self, args: List[str]) -> List[str]:
+        """Parse command sequence with proper quote handling"""
+        try:
+            # Join and re-split with full quote support
+            full_cmd = ' '.join(args)
+            return shlex.split(full_cmd, posix=True)
+        except ValueError as e:
+            raise ValueError(f"Invalid command syntax: {str(e)}")
+
+
 class HelpCommand(Command):
     """Built-in help system implementation"""
     @classmethod
@@ -54,7 +159,7 @@ class HelpCommand(Command):
         help_text = "Available commands:\n"
         for cmd_name in registry._commands:
             cmd_cls = registry._commands[cmd_name]
-            help_text += f"\n{cmd_cls.name():<10} - {cmd_cls.dscp().splitlines()[0]}"
+            help_text += f"\n{cmd_cls.name():<20} - {cmd_cls.dscp().splitlines()[0]}"
         return help_text
     
     def _single_command_help(self, registry, cmd_name: str) -> str:
@@ -161,68 +266,30 @@ class iCellTerminal(QTextEdit):
         self._current_buffer = ""
         self._prompt_positions = [0]
 
-    # ==================== Enhanced Mouse Handling ====================
-    def mousePressEvent(self, event):
-        """Allow text selection but keep cursor in current line"""
-        # Save current cursor position
-        original_cursor = self.textCursor()
-        original_pos = original_cursor.position()
+    def contextMenuEvent(self, event):
+        """Custom context menu with essential actions"""
+        menu = QMenu(self)
         
-        # Process the mouse event normally
-        super().mousePressEvent(event)
-        
-        # Get new cursor position after click
-        new_cursor = self.textCursor()
-        new_pos = new_cursor.position()
-        
-        # Enforce cursor boundary
-        if new_pos < self._current_line_pos:
-            new_cursor.setPosition(self._current_line_pos)
-        self.setTextCursor(new_cursor)
-        
-        # Preserve original selection
-        if original_pos != new_pos:
-            new_cursor.setPosition(original_pos, QTextCursor.KeepAnchor)
-        
-        self._enforce_cursor_boundary()
+        # Add Copy action with selection check
+        copy_action = QAction("Copy", self)
+        copy_action.setEnabled(self.textCursor().hasSelection())
+        copy_action.triggered.connect(self.copy)
+        menu.addAction(copy_action)
 
-    def mouseDoubleClickEvent(self, event):
-        """Handle double-click selection within current line"""
-        # Perform normal double-click selection
-        super().mouseDoubleClickEvent(event)
-        
-        # Adjust selection boundaries
-        cursor = self.textCursor()
-        start = max(cursor.selectionStart(), self._current_line_pos)
-        end = cursor.selectionEnd()
-        
-        # Create new selection within valid range
-        cursor.setPosition(start)
-        cursor.setPosition(end, QTextCursor.KeepAnchor)
-        self.setTextCursor(cursor)
-        
-        self._enforce_cursor_boundary()
+        # Add Copy action with selection check
+        paste_action = QAction("&Paste", self)
+        paste_action.triggered.connect(self._handle_ctrl_v)
+        paste_action.setShortcut("Ctrl+V")
+        menu.addAction(paste_action)
 
-    def mouseMoveEvent(self, event):
-        """Handle text selection with boundary checks"""
-        # Process mouse movement normally
-        super().mouseMoveEvent(event)
+        # Add existing Clear action
+        clear_action = QAction("&Clear", self)
+        clear_action.setShortcut("Ctrl+L")
+        clear_action.triggered.connect(self._handle_ctrl_l)
+        menu.addAction(clear_action)
         
-        # Constrain selection to current line
-        cursor = self.textCursor()
-        if cursor.hasSelection():
-            start = max(cursor.selectionStart(), self._current_line_pos)
-            end = cursor.selectionEnd()
-            
-            # Update selection if out of bounds
-            if start < self._current_line_pos:
-                cursor.setPosition(self._current_line_pos)
-                cursor.setPosition(end, QTextCursor.KeepAnchor)
-                self.setTextCursor(cursor)
-        
-        # self._enforce_cursor_boundary()
+        menu.exec_(event.globalPos())
 
-    # ==================== Core Cursor Control ====================
     def _enforce_cursor_boundary(self):
         """Ensure cursor stays within editable area"""
         cursor = self.textCursor()
@@ -239,6 +306,7 @@ class iCellTerminal(QTextEdit):
             cursor.setPosition(line_end)
         
         self.setTextCursor(cursor)
+
 
     # ==================== Event Processing ====================
     def keyPressEvent(self, event: QKeyEvent):
@@ -261,7 +329,8 @@ class iCellTerminal(QTextEdit):
                 event.accept()
                 return
             elif key == Qt.Key_V:
-                event.ignore()  # Disable Ctrl+V
+                self._handle_ctrl_v()
+                event.accept()  # Disable Ctrl+V
                 return
 
         # Handle Backspace protection
@@ -276,7 +345,7 @@ class iCellTerminal(QTextEdit):
                 return
 
         # Handle Enter key
-        if key == Qt.Key_Return:
+        if key in (Qt.Key_Return, Qt.Key_Enter):
             self._process_command_execution()
             return
 
@@ -301,20 +370,16 @@ class iCellTerminal(QTextEdit):
         super().keyPressEvent(event)
         self._enforce_edit_boundary()
 
-    def contextMenuEvent(self, event):
-        """Custom context menu with limited actions"""
-        menu = QMenu(self)
-        clear_action = QAction("Clear", self)
-        clear_action.triggered.connect(self._handle_ctrl_l)
-        menu.addAction(clear_action)
-        menu.exec_(event.globalPos())
-
     def _handle_ctrl_c(self):
         """Handle Ctrl+C to abort current input"""
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.EndOfLine)
         cursor.insertText("^C")
         self._advance_to_new_prompt()
+
+    def _handle_ctrl_v(self):
+        self._enforce_cursor_boundary()
+        self.paste()
 
     def _handle_ctrl_l(self):
         """Handle Ctrl+L to clear screen"""
@@ -369,11 +434,12 @@ class iCellTerminal(QTextEdit):
             self._display_candidates(prefix, candidates)      
 
     def _display_candidates(self, prefix: str, candidates: List[str]):
+        history_input = self._get_current_line()
         self._append_output(f"\n{'   '.join(candidates)}\n")
         self._insert_prompt()
-        current_input = self._get_current_line()        
+        current_input = self._get_current_line()
         self._append_output(current_input)
-        self._append_output(prefix)
+        self._append_output(history_input)
 
     def _get_completion_prefix(self) -> str:
         """Extract current word for completion matching"""
@@ -384,6 +450,9 @@ class iCellTerminal(QTextEdit):
     # ==================== Command Execution Flow ====================
     def _process_command_execution(self):
         """Handle command submission and output display"""
+        # Ensure cursor at end of line before execution
+        self._enforce_cursor_boundary()
+        
         cmd = self._get_current_line().strip()
         
         if cmd:
@@ -393,6 +462,12 @@ class iCellTerminal(QTextEdit):
         else:
             # Handle empty command with new prompt
             self._advance_to_new_prompt()
+
+    def _move_cursor_to_line_end(self):
+        """Ensure cursor at end of current command line"""
+        cursor = self.textCursor()
+        cursor.movePosition(QTextCursor.EndOfLine)
+        self.setTextCursor(cursor)
 
     def _store_command_history(self, cmd: str):
         """Update command history storage"""
@@ -456,40 +531,6 @@ class iCellTerminal(QTextEdit):
         self.setTextCursor(cursor)
         
 
-# ==================== Sample Command Implementations ====================
-class EchoCommand(Command):
-    """Demonstration command for echo functionality"""
-    @classmethod
-    def name(cls) -> str:
-        return "echo"
-    
-    @classmethod
-    def dscp(cls) -> str:
-        return (
-            "Display input arguments\n"
-            "Usage:\n"
-            "  echo [text...]\n"
-            "Options:\n"
-            "  text  One or more arguments to display"
-        )
-    
-    def execute(self, args: List[str]) -> str:
-        return " ".join(args) if args else ""
-
-class VersionCommand(Command):
-    """System version information"""
-    @classmethod
-    def name(cls) -> str:
-        return "version"
-    
-    @classmethod
-    def dscp(cls) -> str:
-        return "Display terminal version information"
-    
-    def execute(self, args: List[str]) -> str:
-        return "iCell Terminal v2.1.1 (2025)"
-    
-
 def main():
     import sys
     app = QApplication(sys.argv)
@@ -498,6 +539,8 @@ def main():
     registry = CommandRegistry()
     registry.register(EchoCommand.name(), EchoCommand)
     registry.register(VersionCommand.name(), VersionCommand)
+    registry.register(SequenceCommand.name(), SequenceCommand)
+    registry.register(HistoryCommand.name(), HistoryCommand)
 
     terminal = iCellTerminal()
     terminal.resize(800, 400)
@@ -526,14 +569,11 @@ if __name__ == "__main__":
 """
 pyqt5 gui应用
 
-
-基于我现在的代码，帮我支持以下需求：
-1. 使用最简单的方式，鼠标单击，双击事件（选中文本），保证光标在当前行就行（保持不变，用户控制光标，只能通过键盘左右键去控制移动），通过简单设计，保持软件的稳定性
-
-    
-
+1. tab补齐的时候出现问题， 例如用户输入： help h， 这个时候tab补齐会显示help和history两条命令，新起一行的时候只有h, 而不是help h
+iCell> help h
+help   history
+iCell> h
 
 要求：
 1. 代码clean code, 代码注释使用英文
-2. 给出完整版的代码，回答使用中文
 """

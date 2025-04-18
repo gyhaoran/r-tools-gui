@@ -3,13 +3,13 @@ import time
 import random
 import qtawesome as qta
 from collections import deque
-from PyQt5.QtCore import (Qt, QObject, QRunnable, pyqtSignal, pyqtSlot, QMutex, QMutexLocker,
-                         QThreadPool, QTimer, QDateTime)
+from PyQt5.QtCore import (Qt, QObject, QThread, pyqtSignal, QMutex, QMutexLocker, QDateTime, QProcess, QTimer)
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTreeWidget, QAction, QHBoxLayout, QPushButton,
                              QTreeWidgetItem, QDockWidget, QTableWidget,
                              QTableWidgetItem, QVBoxLayout, QWidget,
                              QHeaderView, QStyleFactory)
+import subprocess
 
 #region Constants and Enums
 class TaskStatus:
@@ -17,63 +17,110 @@ class TaskStatus:
     RUNNING = ("Running", "#1E90FF")    # Dodger Blue
     COMPLETED = ("Completed", "#32CD32")# Lime Green
     CANCELED  = ("Canceled", "#FF5722")   # Orange 
+    STOPED   = ("Stopped", "#FF9800")    # Deep Orange
+    FAILED   = ("Failed", "#FF4500")      # Red Orange
     ERROR     = ("Error", "#F44336")      # Red 
+    TIMEOUT = ("Timeout", "#FF4081")      # Pink
     
-class DataRole:
-    CELL_MANAGER = Qt.UserRole + 1
-    TASK_HISTORY = Qt.UserRole + 2
 #endregion
 
 #region Core Components
 class CellManager(QObject):
+    finished = pyqtSignal(bool)
     """Business logic handler for tree items"""
     def __init__(self, identifier, times=3):
         super().__init__()
-        self.id  = identifier
-        self.task_count  = 0
-        self.times = times
-        self.suspended = False
-
-    def _process(self):
-        """Simulate task execution with random results"""
-        delay = random.uniform(0.5,  3.0)
-        results = random.randint(1,  5)
-        
-        self._delay()   # Simulate processing time
-        return f"d={delay:.2f}s, r={results}"
-    
-    def _delay(self):
-        begin = time.time()
-        for i in range(1, 80000000):
-            s = i+ i
-        end = time.time()
-        print(f"delay: {end - begin}")
+        self.id = identifier
+        self.task_count = 0
+        self._mutex = QMutex()
 
     def execute(self):
-        """Simulate task execution with random results"""
-        try:
-            print(f"Task: {self.id}, run {self.times} times: ")
-            while self.task_count < self.times:
-                self.task_count += 1
-                results = self._process()
-                print(f"  {self.task_count}: {results}")
-            if random.random()  < 0.2:  # 20% error rate
-                raise RuntimeError("Simulated execution error")
-        except Exception as e:
-            raise e
+        """启动任务的三步验证"""
+        with QMutexLocker(self._mutex):
+            self.proc = QProcess()
+            self.proc.finished.connect(self._on_finished)
+            self.proc.errorOccurred.connect(self._on_error)
+            self.proc.readyReadStandardError.connect(self._on_stderr_reday)
+            self.proc.readyReadStandardOutput.connect(self._on_stdout_reday)
+            self.proc.start("icell_pr", ["-tech=/home/data/sbd.tech"]) 
 
+    def _on_stdout_reday(self):
+        """处理标准输出"""
+        if self.proc.canReadLine():
+            line = self.proc.readLine().data().decode()
+            print(f"stdout: {line.strip()}")
+    
+        
+    def stop(self):
+        """安全终止进程的三阶段策略"""
+        with QMutexLocker(self._mutex):
+            print(f"Stopping task {self.id} process state {self.proc.state()}")
+            if self.proc.state() == QProcess.NotRunning:
+                return False
+
+            # 第一阶段：优雅终止
+            print(f"Stopping task {self.id}...")
+            self.proc.terminate()
+            
+            # 设置超时检测
+            QTimer.singleShot(3000, self._kill_if_needed)
+            return True
+
+    def _kill_if_needed(self):
+        """第二阶段：强制终止"""
+        with QMutexLocker(self._mutex):
+            if self.proc.state() == QProcess.Running:
+                self.proc.kill()
+                self.stopped.emit()
+
+    def _on_finished(self, exit_code):
+        """处理正常结束"""
+        self.finished.emit(exit_code == 0)
+
+    def _on_error(self, error):
+        """处理异常情况"""
+        print(f"{self.id} runtime error: {error}  {self.proc.errorString()}")
+        self.finished.emit(False)
+        
+    def _on_stderr_reday(self):
+        """处理错误输出"""
+        line = self.proc.readAllStandardError().data().decode()
+        print(f"stderr: {line.strip()}")
+        
+class Worker(QObject):
+    finished = pyqtSignal(bool)
+    
+    def __init__(self, manager:CellManager):
+        super().__init__()
+        self.manager = manager
+        self.manager.finished.connect(self._on_finished)
+    
+    def __call__(self):
+        self.manager.execute()
+    
+    def stop(self):
+        self.manager.stop()
+        
+    def _on_finished(self, success):
+        if success:
+            print(f"Task {self.manager.id} completed successfully.")
+        self.finished.emit(success)
+        
+        
 class TaskSignals(QObject):
     status_changed = pyqtSignal(int, tuple)  # (task_id, status)
 
-class TaskExecutor(QRunnable):
+# class TaskExecutor(QThread):
+class TaskExecutor(QObject):
     """Managed task execution unit"""
-    def __init__(self, task_id, manager):
+    def __init__(self, task_id, worker: Worker):
         super().__init__()
-        self.setAutoDelete(False)
         self.task_id  = task_id
-        self.manager  = manager
+        self.worker  = worker
         self.signals  = TaskSignals()
-        self._status = TaskStatus.PENDING
+        self._status = None
+        self.status = TaskStatus.PENDING
+        self.worker.finished.connect(self._on_finished)
 
     @property
     def status(self):
@@ -84,16 +131,35 @@ class TaskExecutor(QRunnable):
         self._status = value
         self.signals.status_changed.emit(self.task_id, value)
 
-    @pyqtSlot()
     def run(self):
         """Thread-safe execution logic"""
         try:
             self.status  = TaskStatus.RUNNING
-            self.manager.execute()
-            self.status  = TaskStatus.COMPLETED
+            self.worker()
         except Exception as e:
-            print(f"error: {e}")
+            print(f"task_id {self.task_id}, runtime error {e}")
             self.status  = TaskStatus.ERROR
+            
+    def start(self):    
+        try:
+            self.status  = TaskStatus.RUNNING
+            self.worker()
+        except Exception as e:
+            print(f"task_id {self.task_id}, runtime error {e}")
+            self.status  = TaskStatus.ERROR
+            
+    def _on_finished(self, success):
+        """Handle task completion"""
+        if success:
+            self.status  = TaskStatus.COMPLETED
+        else:
+            self.status  = TaskStatus.ERROR
+    
+    def stop(self):
+        """Terminate thread execution"""
+        self.worker.stop()
+        self.status  = TaskStatus.STOPED
+
 
 class TaskManager(QObject):
     """Central task scheduler"""
@@ -102,8 +168,6 @@ class TaskManager(QObject):
 
     def __init__(self):
         super().__init__()
-        self.thread_pool  = QThreadPool.globalInstance()
-        self.thread_pool.setMaxThreadCount(self.MAX_CONCURRENT_TASKS * 5)
         self._running_tasks = {}
         self._finished_tasks = {}
         self._pendding_tasks = deque()
@@ -123,7 +187,7 @@ class TaskManager(QObject):
         """Begin task execution"""
         if len(self._running_tasks) < self.MAX_CONCURRENT_TASKS:
             self._running_tasks[task.task_id] = task
-            self.thread_pool.start(task)
+            task.start()
         else:
             self._enqueue_task(task)            
     
@@ -144,19 +208,16 @@ class TaskManager(QObject):
     def cancel_task(self, task_id):
         """Terminate task execution"""
         with QMutexLocker(self._lock):
-            if task_id in self._running_tasks:
-                task = self._running_tasks.pop(task_id)
-                task.status = TaskStatus.CANCELED
-                self._cancel_tasks[task_id] = task
-            else:
-                self._remove_if_in_pending(task_id)
+            self._remove_if_in_pending(task_id)
                 
     def stop_task(self, task_id):
         """Pause task execution"""
         with QMutexLocker(self._lock):
             if task_id in self._running_tasks:
                 task = self._running_tasks.pop(task_id)
-                self._enqueue_task(task)
+                task.stop()
+                self._cancel_tasks[task_id] = task
+                print(f"Task {task_id} stopped")
             else:
                 print(f"Task {task_id} not found")
     
@@ -172,13 +233,13 @@ class TaskManager(QObject):
             else:
                 print(f"Task {task_id} not found")
 
-    def create_task(self, manager, callback):
+    def create_task(self, worker, callback):
         """Register and dispatch new task"""
         with QMutexLocker(self._lock):
             self._task_counter  += 1
-            task = TaskExecutor(self._task_counter,  manager)
+            task = TaskExecutor(self._task_counter,  worker)
             self._call_backs[self._task_counter] = callback
-            task.signals.status_changed.connect(self.update_status)
+            task.signals.status_changed.connect(self.update_status, Qt.ConnectionType.QueuedConnection)
             self._start_task(task)
 
         return self._task_counter
@@ -189,10 +250,22 @@ class TaskManager(QObject):
             if task_id in self._call_backs:
                 self._call_backs[task_id](task_id, status)
             if status == TaskStatus.COMPLETED or status == TaskStatus.ERROR:
-                self._finished_tasks[task_id] = self._running_tasks.pop(task_id)
+                if task_id in self._running_tasks:
+                    self._finished_tasks[task_id] = self._running_tasks.pop(task_id)
                 if self._pendding_tasks:
                     self._start_task(self._pendding_tasks.popleft())
 
+    def clean_up(self):
+        """Terminate all tasks"""
+        with QMutexLocker(self._lock):
+            for task in self._running_tasks.values():
+                task.stop()
+            self._running_tasks.clear()
+            self._pendding_tasks.clear()
+            self._finished_tasks.clear()
+            self._cancel_tasks.clear()
+            self._task_counter = 0
+            self._call_backs.clear()
 #endregion
 
 #region GUI Components
@@ -257,7 +330,7 @@ class TaskMonitor(QTableWidget):
             row = self._find_row(task_id)
             if row is None:
                 row = self._create_row(task_id)
-            self._update_cells(task_id, row, status, type, details)
+            self._update_cells(task_id, row, status, type, details=f"{type}: {details}")
 
     def _find_row(self, task_id):
         items = self.findItems(str(task_id), Qt.MatchExactly)
@@ -275,7 +348,6 @@ class TaskMonitor(QTableWidget):
         if status == TaskStatus.PENDING:
             return
         if status == TaskStatus.RUNNING:
-            print("Start Time", row)
             self.setItem(row, 4, QTableWidgetItem(QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")))
             # self.item(row, 4).setText(QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss"))
         else:
@@ -301,6 +373,7 @@ class TaskMonitor(QTableWidget):
         control.btn.clicked.connect( 
             lambda: self.control_clicked.emit(task_id, control._current_action))
         control.set_action(status)
+
 
 class MainWindow(QMainWindow):
     """Main application window with simplified tree structure"""
@@ -337,15 +410,6 @@ class MainWindow(QMainWindow):
         
         self.setCentralWidget(self.tree) 
         
-    def control_task(self, task_id, action):
-        """Handle task control actions"""
-        if action == "cancel":
-            self.task_manager.cancel_task(task_id)
-        elif action == "stop":
-            self.task_manager.stop_task(task_id)
-        elif action == "restart":
-            self.task_manager.restart_task(task_id)
- 
     def _setup_tree(self):
         """Build simplified tree structure without checkboxes"""
         modules = [
@@ -360,6 +424,17 @@ class MainWindow(QMainWindow):
             for child_text in children:
                 child = QTreeWidgetItem(parent, [child_text])
                 self._bind_manager(child.text(0))
+        
+    def control_task(self, task_id, action):
+        """Handle task control actions"""
+        print(f"Control task {task_id} with action: {action}")  
+        if action == "cancel":
+            self.task_manager.cancel_task(task_id)
+        elif action == "stop":
+            self.task_manager.stop_task(task_id)
+        elif action == "restart":
+            self.task_manager.restart_task(task_id)
+ 
  
     def _bind_manager(self, identifier):
         """Attach business logic to tree items"""
@@ -369,6 +444,10 @@ class MainWindow(QMainWindow):
     def _connect_signals(self):
         """Establish signal connections"""
         self.run_btn.triggered.connect(self._on_execute_clicked) 
+        
+    def run_task(self, manager):
+        manager.execute()
+        return manager.result()
  
     def _on_execute_clicked(self):
         """Handle execution trigger for selected items"""
@@ -377,20 +456,25 @@ class MainWindow(QMainWindow):
             for item in selected_items:
                 manager = self._managers.get(item.text(0))
                 if manager:
-                    self._start_processing(item, manager)
+                    worker = Worker(manager)
+                    self._start_processing(item, worker)
+                else:
+                    print(f"Manager not found for {item.text(0)}")
         except Exception as e:
             print(e)
  
-    def _start_processing(self, item, manager):
+    def _start_processing(self, item, worker):
         """Initiate task processing"""
-        task_id = self.task_manager.create_task( 
-            manager,
-            lambda tid, status: self._on_task_complete(tid, status, item)
-        )
+        task_id = self.task_manager.create_task(worker, lambda tid, status: self._on_task_complete(tid, status, item))
+        # self.monitor.update_entry(task_id, TaskStatus.PENDING)
          
     def _on_task_complete(self, task_id, status, item):
         """Handle task completion"""
-        self.monitor.update_entry(task_id, status)
+        self.monitor.update_entry(task_id, status, details=item.text(0))
+        
+    def closeEvent(self, a0):
+        self.task_manager.clean_up()
+        return super().closeEvent(a0)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv) 

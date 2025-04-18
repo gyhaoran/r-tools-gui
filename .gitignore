@@ -2,6 +2,7 @@ __pycache__
 
 .vscode
 .idea
+.iCell
 
 build
 release
@@ -10,3 +11,8 @@ dist
 
 *.log
 *.o
+
+lefRWarning.log
+output
+.output
+tmp

@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QLabel, QTextEdit, QTabWidget, QTreeWidget, QTreeWidgetItem
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()

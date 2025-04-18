@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QFormLayout, QComboBox, QSpinB
 from PyQt5.QtCore import Qt, QRegExp, pyqtSignal
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
  
+
 # =================================================== 
 # Integrated Configuration Dialog with Tabs 
 # =================================================== 
@@ -387,13 +388,11 @@ class ForbiddenTrackManager(QWidget):
     
     def _init_ui(self):
         layout = QVBoxLayout()
-        self.table  = QTableWidget(0, 2)
-        self.table.setHorizontalHeaderLabels(["Layer", "Forbidden Tracks"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch) 
-        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.table.customContextMenuRequested.connect(self._show_context_menu)
-        self.table.setSortingEnabled(True)
-        self.table.sortItems(0, Qt.AscendingOrder)
+        self.table  = QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(["Layer", "Forbidden Tracks", ""])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Fixed)
+        self.table.setColumnWidth(2, 40)
         
         # Control buttons 
         add_btn = QPushButton("Add Pin Location")
@@ -413,9 +412,6 @@ class ForbiddenTrackManager(QWidget):
             if action == delete_action:
                 self._delete_row(row)
 
-    def _delete_row(self, row):
-        self.layers_def.appendleft(self.table.item(row, 0).text())
-        self.table.removeRow(row)
     
     def _add_forbidden_row(self):
         if not self.layers_def:
@@ -434,7 +430,18 @@ class ForbiddenTrackManager(QWidget):
         pattern = r'^(\d+(-\d+)?)(,\s*\d+(-\d+)?)*$'  # match numbers or ranges, e.g. 1-3,5,7-9 
         forbid_tracks.setValidator(QRegExpValidator(QRegExp(pattern))) 
         forbid_tracks.editingFinished.connect(lambda : self._validate_track_input(forbid_tracks)) 
-        self.table.setCellWidget(row, 1, forbid_tracks)
+        self.table.setCellWidget(row, 1, forbid_tracks)        
+        self._create_delete_button(row)
+    
+    def _delete_row(self, row):
+        self.layers_def.appendleft(self.table.item(row, 0).text())
+        self.table.removeRow(row)
+    
+    def _create_delete_button(self, row):
+        import qtawesome as qta
+        delete_btn = QPushButton(qta.icon("fa.trash"), "")
+        delete_btn.clicked.connect(lambda: self._delete_row(row))
+        self.table.setCellWidget(row, 2, delete_btn)
     
     def _validate_track_input(self, forbid_tracks):
         input_text = forbid_tracks.text()
@@ -522,4 +529,3 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show() 
     sys.exit(app.exec_()) 
-    
