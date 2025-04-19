@@ -1,8 +1,0 @@
-{
-    "name": "CorePlugin",
-    "version": "0.1.0",
-    "vendor": "iCell",
-    "description": "The core plugin for the iCell IDE.",
-    "dependencies": [],
-    "loaded": true
-}

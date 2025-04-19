@@ -1,5 +1,7 @@
-import importlib
 import os
+from .core_plugin import CorePlugin
+from .pac_plugin import PacPlugin
+
 
 class PluginManager:
     def __init__(self, main_window):
@@ -9,29 +11,24 @@ class PluginManager:
 
     def load_plugins(self):
         """Load all plugins"""
-        for plugin_name in os.listdir(self.plugins_path):
-            if self._is_plugin(plugin_name):
-                self._load_plugin(plugin_name, True)
-
-    def _is_plugin(self, plugin_name) -> bool:
-        return os.path.isdir(os.path.join(self.plugins_path, plugin_name)) and plugin_name != "__pycache__"
-
-    def _load_plugin(self, plugin_name, pass_main_window=False):
-        """Load a plugin by name.        
-        Args:
-            plugin_name (str): The name of the plugin directory.
-            pass_main_window (bool): Whether to pass main_window to the plugin.
-        """
         try:
-            module = importlib.import_module(f"plugins.{plugin_name}.{plugin_name}")
-            plugin_class = getattr(module, plugin_name.title().replace("_", ""))
-            
-            # Pass main_window only if required
-            plugin_instance = plugin_class(self.main_window) if pass_main_window else plugin_class()
-            plugin_instance.load()
-            self.plugins[plugin_instance.name()] = plugin_instance
+            self.plugins.clear()
+            self.load_core_plugin()
+            self.load_pac_plugin()
         except Exception as e:
-            print(f"Failed to load plugin {plugin_name}: {e}")
+            print(f"Failed to load plugin: {e}")
+
+    def load_pac_plugin(self):
+        """Load pac plugin"""
+        pac_plugin = PacPlugin(self.main_window)
+        pac_plugin.load()
+        self.plugins[pac_plugin.name()] = pac_plugin
+                
+    def load_core_plugin(self):
+        """Load core plugin"""
+        core_plugin = CorePlugin(self.main_window)
+        core_plugin.load()
+        self.plugins[core_plugin.name()] = core_plugin
 
     def unload_plugin(self, plugin_name):
         """Unload a specfic plugin."""

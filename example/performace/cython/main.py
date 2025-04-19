@@ -13,13 +13,13 @@ def sum(arr):
     
 
 def main():
-    int_array = array('i', range(50000000))  # 'i' 表示有符号整数
+    int_array = array('i', range(500000000))  # 'i' 表示有符号整数
     result = fast_sum(int_array)  # 正确调用
     print(f"Result: {result}")  # 输出结果
     
 
 def main_python():
-    int_array = array('i', range(50000000))  # 'i' 表示有符号整数
+    int_array = array('i', range(500000000))  # 'i' 表示有符号整数
     result = sum(int_array)  # 调用 Python 实现的 sum 函数
     print(f"Result: {result}")  # 输出结果
 
